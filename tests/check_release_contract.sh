@@ -17,8 +17,10 @@ grep -F "soversion: '1'" "$root/src/meson.build" >/dev/null ||
   fail 'library SONAME generation is not 1'
 grep -F "version: '>=3.0.0'" "$root/meson.build" >/dev/null ||
   fail 'libpkgsource dependency floor is not 3.0.0'
-grep -F "requires: ['libpkgsource >= 3.0.0']" "$root/src/meson.build" >/dev/null ||
-  fail 'pkg-config public dependency floor differs from Meson'
+if grep -E '^[[:space:]]*requires(_private)?:' \
+    "$root/src/meson.build" >/dev/null; then
+  fail 'pkg-config requirements duplicate the library dependency closure'
+fi
 grep -F 'zeppe-lin.recipe/1' "$root/RECIPE-YAML.md" >/dev/null ||
   fail 'recipe/1 protocol is not documented'
 if grep -R -E 'zeppe-lin\.recipe/2|RECIPE-YAML-2|recipe\.yml/2' \

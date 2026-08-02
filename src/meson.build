@@ -31,6 +31,6 @@ pkgconf.generate(
   filebase: 'libpkgsource-yaml',
   description: 'Strict native YAML syntax adapter for libpkgsource',
   subdirs: '.',
-  requires: ['libpkgsource >= 3.0.0'],
-  requires_private: ['yaml-0.1 >= 0.2.5'],
+  # Requirements are derived from the library target's dependency closure.
+  # Repeating them here would duplicate entries in the generated .pc file.
 )
