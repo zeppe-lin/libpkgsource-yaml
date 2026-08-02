@@ -1,0 +1,108 @@
+# SPDX-FileCopyrightText: 2026 Alexandr Savca
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        mode: [shared, static]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out libpkgsource 3.0.0
+        uses: actions/checkout@v4
+        with:
+          repository: zeppe-lin/libpkgsource
+          ref: v3.0.0
+          path: dependencies/libpkgsource
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            g++ clang meson ninja-build pkg-config libssl-dev libyaml-dev \
+            scdoc mandoc
+      - name: Select compiler
+        run: |
+          if [ '${{ matrix.compiler }}' = clang ]; then
+            echo 'CC=clang' >> "$GITHUB_ENV"
+            echo 'CXX=clang++' >> "$GITHUB_ENV"
+          else
+            echo 'CC=gcc' >> "$GITHUB_ENV"
+            echo 'CXX=g++' >> "$GITHUB_ENV"
+          fi
+      - name: Build and install exact source authority
+        run: |
+          prefix="$RUNNER_TEMP/prefix"
+          meson setup dependencies/libpkgsource/build \
+            dependencies/libpkgsource \
+            --prefix="$prefix" \
+            -Ddefault_library=${{ matrix.mode }} \
+            -Dlink_mode=${{ matrix.mode }} \
+            -Dtests=disabled \
+            -Dman_pages=disabled
+          meson compile -C dependencies/libpkgsource/build
+          meson install -C dependencies/libpkgsource/build
+          echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$prefix/lib" >> "$GITHUB_ENV"
+      - name: Configure
+        run: |
+          meson setup build \
+            -Ddefault_library=${{ matrix.mode }} \
+            -Dlink_mode=${{ matrix.mode }} \
+            -Dman_pages=enabled \
+            -Dwerror=true
+      - name: Compile
+        run: meson compile -C build
+      - name: Test
+        run: meson test -C build --print-errorlogs
+      - name: Lint manuals
+        run: |
+          find build -type f \( -name 'pkgsource_yaml.3' \
+            -o -name 'pkgsource_profiles_yaml.5' \
+            -o -name 'pkgsource_recipe_yaml.5' \) \
+            -exec mandoc -Tlint {} +
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out libpkgsource 3.0.0
+        uses: actions/checkout@v4
+        with:
+          repository: zeppe-lin/libpkgsource
+          ref: v3.0.0
+          path: dependencies/libpkgsource
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            g++ meson ninja-build pkg-config libssl-dev libyaml-dev
+      - name: Build and install source authority
+        run: |
+          prefix="$RUNNER_TEMP/prefix"
+          meson setup dependencies/libpkgsource/build \
+            dependencies/libpkgsource \
+            --prefix="$prefix" \
+            -Dtests=disabled \
+            -Dman_pages=disabled
+          meson compile -C dependencies/libpkgsource/build
+          meson install -C dependencies/libpkgsource/build
+          echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$prefix/lib" >> "$GITHUB_ENV"
+      - name: Configure and test with ASan and UBSan
+        run: |
+          meson setup build \
+            -Db_sanitize=address,undefined \
+            -Db_lundef=false \
+            -Dman_pages=disabled \
+            -Dwerror=true
+          meson compile -C build
+          ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
+          UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
+            meson test -C build --print-errorlogs
