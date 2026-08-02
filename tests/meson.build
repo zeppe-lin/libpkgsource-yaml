@@ -57,6 +57,7 @@ if get_option('tests').enabled()
     'provider-boundary',
     'parser-boundary',
     'documentation-contract',
+    'doxygen-contract',
     'release-contract',
     'style-contract',
   ]
