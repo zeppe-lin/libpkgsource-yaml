@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 if get_option('tests').enabled()
   foreach test_spec : [
-    ['profiles', 'yaml_profiles_test.cpp'],
-    ['recipe', 'yaml_recipe_test.cpp'],
-    ['limits', 'limits_test.cpp'],
-    ['public-headers', 'yaml_adapter_header_test.cpp'],
+    ['profiles', 'profiles/contract_test.cpp'],
+    ['recipe', 'recipe/contract_test.cpp'],
+    ['limits', 'parser/limits_test.cpp'],
+    ['public-headers', 'public/headers_test.cpp'],
   ]
     test_executable = executable(
       test_spec[0] + '-test',
@@ -21,7 +21,7 @@ if get_option('tests').enabled()
     'metadata',
     sh,
     args: [
-      join_paths(meson.current_source_dir(), 'yaml_adapter_metadata_test.sh'),
+      join_paths(meson.current_source_dir(), 'contracts/metadata_test.sh'),
       meson.project_build_root(),
       meson.project_version(),
     ],
@@ -30,7 +30,7 @@ if get_option('tests').enabled()
     'parser-boundary',
     sh,
     args: [
-      join_paths(meson.current_source_dir(), 'check_parser_boundary.sh'),
+      join_paths(meson.current_source_dir(), 'contracts/check_parser_boundary.sh'),
       meson.project_source_root(),
     ],
   )
@@ -38,7 +38,7 @@ if get_option('tests').enabled()
     'documentation-contract',
     sh,
     args: [
-      join_paths(meson.current_source_dir(), 'check_documentation_contract.sh'),
+      join_paths(meson.current_source_dir(), 'contracts/check_documentation_contract.sh'),
       meson.project_source_root(),
     ],
   )
@@ -46,7 +46,7 @@ if get_option('tests').enabled()
     'release-contract',
     sh,
     args: [
-      join_paths(meson.current_source_dir(), 'check_release_contract.sh'),
+      join_paths(meson.current_source_dir(), 'contracts/check_release_contract.sh'),
       meson.project_source_root(),
     ],
   )

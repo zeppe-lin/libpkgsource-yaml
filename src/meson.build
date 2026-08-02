@@ -4,7 +4,7 @@ public_inc = include_directories('../include')
 
 libpkgsource_yaml = library(
   'pkgsource-yaml',
-  ['document.cpp', 'profiles.cpp', 'recipe.cpp'],
+  ['internal/document.cpp', 'profiles.cpp', 'recipe.cpp'],
   include_directories: public_inc,
   dependencies: [libpkgsource_dep, libyaml_dep],
   install: true,

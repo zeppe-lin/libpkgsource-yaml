@@ -49,5 +49,6 @@ Every call is bounded by `parse_limits`: total input bytes, scalar bytes, parsed
 node count, and nesting depth. The library does not expose libyaml types in its
 public ABI.
 
-See `DESIGN.md`, `PROFILES-YAML.md`, `RECIPE-YAML.md`, and `TESTING.md` for the
+See `docs/architecture.md`, `docs/protocols/profiles-yaml-v1.md`,
+`docs/protocols/recipe-yaml-v1.md`, and `docs/testing.md` for the
 normative ownership and qualification contracts.

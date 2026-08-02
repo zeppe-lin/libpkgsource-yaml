@@ -26,10 +26,10 @@ if grep -E "requires:.*['\"]libpkgsource" \
     "$root/src/meson.build" >/dev/null; then
   fail 'pkg-config names libpkgsource as a string instead of de-duplicating its dependency object'
 fi
-grep -F 'zeppe-lin.recipe/1' "$root/RECIPE-YAML.md" >/dev/null ||
+grep -F 'zeppe-lin.recipe/1' "$root/docs/protocols/recipe-yaml-v1.md" >/dev/null ||
   fail 'recipe/1 protocol is not documented'
 if grep -R -E 'zeppe-lin\.recipe/2|RECIPE-YAML-2|recipe\.yml/2' \
-    "$root/src" "$root/include" "$root/man" "$root/README.md" \
-    "$root/DESIGN.md" "$root/RECIPE-YAML.md" >/dev/null; then
+    "$root/src" "$root/include" "$root/docs/man" "$root/README.md" \
+    "$root/docs/architecture.md" "$root/docs/protocols/recipe-yaml-v1.md" >/dev/null; then
   fail 'unpublished recipe/2 generation remains in the public implementation or contract'
 fi
