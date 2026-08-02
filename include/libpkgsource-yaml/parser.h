@@ -73,13 +73,23 @@ struct parse_limits final {
  */
 class PKGSOURCE_YAML_API yaml_error final : public std::runtime_error {
 public:
-  /** Construct one parser failure. */
+  /**
+   * Construct one parser failure.
+   *
+   * @param code Stable failure category.
+   * @param document Caller-supplied document label.
+   * @param path Protocol path associated with the failure.
+   * @param line One-based source line, or zero when unavailable.
+   * @param column One-based source column, or zero when unavailable.
+   * @param message Human-readable diagnostic message.
+   */
   yaml_error(yaml_error_code code,
              std::string document,
              std::string path,
              std::uint32_t line,
              std::uint32_t column,
              std::string message);
+  /** Destroy one parser failure. */
   ~yaml_error() override;
 
   /** Return the stable parser failure category. */
