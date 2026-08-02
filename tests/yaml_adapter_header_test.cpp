@@ -3,4 +3,4 @@
 #include <libpkgsource-yaml/libpkgsource-yaml.h>
 #include <libpkgsource-yaml/parser.h>
 
-int main() {}
+int main() { return 0; }

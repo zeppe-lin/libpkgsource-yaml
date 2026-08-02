@@ -7,7 +7,7 @@
 #include <string_view>
 
 using namespace pkgsource;
-using namespace pkgsource::yaml_adapter;
+using namespace pkgsource::yaml;
 
 namespace {
 
@@ -58,20 +58,18 @@ format: zeppe-lin.profiles/1
 
 void test_parse_and_seal()
 {
-  parsed_profile_document parsed = parse_profiles_yaml_v1(
+  auto declarations = parse_profiles_yaml(
       first_document(), source_origin("profiles.yml"));
-  assert(parsed.origin().document() == "profiles.yml");
-  assert(parsed.declarations().size() == 2);
-  assert(parsed.declarations()[0].name().name() == "@toolchain");
-  assert(parsed.declarations()[0].provenance().path()
-         == "profiles.toolchain");
-  assert(parsed.declarations()[0].members()[0].provenance().path()
+  assert(declarations.size() == 2);
+  assert(declarations[0].name().name() == "@toolchain");
+  assert(declarations[0].provenance().document() == "profiles.yml");
+  assert(declarations[0].provenance().path() == "profiles.toolchain");
+  assert(declarations[0].members()[0].provenance().path()
          == "profiles.toolchain.members[0]");
 
-  profile_catalog first = seal_profiles_yaml_v1(
-      first_document(), source_origin("profiles.yml"));
-  profile_catalog reordered = seal_profiles_yaml_v1(
-      reordered_document(), source_origin("profiles.yml"));
+  profile_catalog first = profile_catalog::seal(std::move(declarations));
+  profile_catalog reordered = profile_catalog::seal(parse_profiles_yaml(
+      reordered_document(), source_origin("profiles.yml")));
   const sealed_profile& toolchain = first.require(
       profile_reference("@toolchain"));
   assert(toolchain.expansion().size() == 2);
@@ -84,7 +82,7 @@ void test_parse_and_seal()
 void test_strict_yaml_rejections()
 {
   expect_yaml(yaml_error_code::duplicate_key, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\n"
         "format: zeppe-lin.profiles/1\n"
         "profiles: {}\n",
@@ -92,13 +90,13 @@ void test_strict_yaml_rejections()
   }, "format");
 
   expect_yaml(yaml_error_code::unknown_key, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\nprofiles: {}\nextra: no\n",
         source_origin("profiles.yml"));
   }, "extra");
 
   expect_yaml(yaml_error_code::unsupported_feature, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\n"
         "profiles:\n"
         "  compiler: &compiler\n"
@@ -108,23 +106,20 @@ void test_strict_yaml_rejections()
   });
 
   expect_yaml(yaml_error_code::unsupported_feature, [] {
-    (void)parse_profiles_yaml_v1(
-        "format: zeppe-lin.profiles/1\n"
-        "profiles: *compiler\n",
+    (void)parse_profiles_yaml(
+        "format: zeppe-lin.profiles/1\nprofiles: *compiler\n",
         source_origin("profiles.yml"));
   });
 
   expect_yaml(yaml_error_code::unsupported_feature, [] {
-    (void)parse_profiles_yaml_v1(
-        "%YAML 1.2\n"
-        "---\n"
-        "format: zeppe-lin.profiles/1\n"
-        "profiles: {}\n",
+    (void)parse_profiles_yaml(
+        "%YAML 1.2\n---\n"
+        "format: zeppe-lin.profiles/1\nprofiles: {}\n",
         source_origin("profiles.yml"));
   });
 
   expect_yaml(yaml_error_code::unsupported_feature, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\n"
         "profiles:\n"
         "  compiler:\n"
@@ -133,49 +128,46 @@ void test_strict_yaml_rejections()
   });
 
   expect_yaml(yaml_error_code::unsupported_feature, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\n"
         "profiles: !zeppe/profiles {}\n",
         source_origin("profiles.yml"));
   });
 
   expect_yaml(yaml_error_code::invalid_document, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "---\nformat: zeppe-lin.profiles/1\nprofiles: {}\n"
         "---\nformat: zeppe-lin.profiles/1\nprofiles: {}\n",
         source_origin("profiles.yml"));
   });
 
-
   expect_yaml(yaml_error_code::invalid_type, [] {
-    (void)parse_profiles_yaml_v1(
-        "? [format]\n"
-        ": zeppe-lin.profiles/1\n"
-        "profiles: {}\n",
+    (void)parse_profiles_yaml(
+        "? [format]\n: zeppe-lin.profiles/1\nprofiles: {}\n",
         source_origin("profiles.yml"));
   }, "$");
 
   expect_yaml(yaml_error_code::invalid_document, [] {
-    (void)parse_profiles_yaml_v1("", source_origin("profiles.yml"));
+    (void)parse_profiles_yaml("", source_origin("profiles.yml"));
   }, "$");
 }
 
 void test_schema_rejections()
 {
   expect_yaml(yaml_error_code::invalid_value, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/2\nprofiles: {}\n",
         source_origin("profiles.yml"));
   }, "format");
 
   expect_yaml(yaml_error_code::invalid_type, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\nprofiles: []\n",
         source_origin("profiles.yml"));
   }, "profiles");
 
   expect_yaml(yaml_error_code::invalid_value, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\n"
         "profiles:\n"
         "  Toolchain:\n"
@@ -185,7 +177,7 @@ void test_schema_rejections()
   }, "profiles.Toolchain");
 
   expect_yaml(yaml_error_code::invalid_value, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\n"
         "profiles:\n"
         "  empty:\n"
@@ -194,7 +186,7 @@ void test_schema_rejections()
   }, "profiles.empty");
 
   expect_yaml(yaml_error_code::invalid_type, [] {
-    (void)parse_profiles_yaml_v1(
+    (void)parse_profiles_yaml(
         "format: zeppe-lin.profiles/1\n"
         "profiles:\n"
         "  compiler:\n"

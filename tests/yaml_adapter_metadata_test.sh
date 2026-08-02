@@ -10,21 +10,40 @@ metadata=$build_root/meson-private/libpkgsource-yaml.pc
     sed -n '1p'
 )
 [ -n "${metadata:-}" ] && [ -s "$metadata" ] || {
-  echo 'yaml-adapter-metadata-test: generated metadata not found' >&2
+  echo 'yaml-metadata-test: generated metadata not found' >&2
   exit 1
 }
+
 grep -F 'Name: libpkgsource-yaml' "$metadata" >/dev/null
-awk -v expected="$project_version" '
+grep -F "Version: $project_version" "$metadata" >/dev/null
+
+source_count=$(awk '
   $1 == "Requires:" {
-    for (i = 2; i + 2 <= NF; ++i) {
-      if ($i == "libpkgsource" && $(i + 1) == "=" &&
-          $(i + 2) == expected) {
-        found = 1
-      }
-    }
+    for (i = 2; i <= NF; ++i)
+      if ($i == "libpkgsource") ++count
   }
-  END { exit found ? 0 : 1 }
-' "$metadata"
+  END { print count + 0 }
+' "$metadata")
+[ "$source_count" -eq 1 ] || {
+  echo "yaml-metadata-test: expected one public libpkgsource requirement, found $source_count" >&2
+  cat "$metadata" >&2
+  exit 1
+}
+grep -E 'Requires:.*libpkgsource[[:space:]]*>=[[:space:]]*3\.0\.0' \
+  "$metadata" >/dev/null
+
+yaml_count=$(awk '
+  $1 == "Requires.private:" {
+    for (i = 2; i <= NF; ++i)
+      if ($i == "yaml-0.1") ++count
+  }
+  END { print count + 0 }
+' "$metadata")
+[ "$yaml_count" -eq 1 ] || {
+  echo "yaml-metadata-test: expected one private yaml-0.1 requirement, found $yaml_count" >&2
+  cat "$metadata" >&2
+  exit 1
+}
 grep -E \
   'Requires.private:.*yaml-0\.1[[:space:]]*>=[[:space:]]*0\.2\.5' \
   "$metadata" >/dev/null
