@@ -76,6 +76,7 @@ if get_option('tests').enabled()
     'html-docs-contract',
     'manpage-source',
     'manpage-normalizer',
+    'manpage-writer-options',
   ]
     test(
       contract,

@@ -23,7 +23,9 @@ cat > "$input" <<'EOF'
 .SH SYNOPSIS
 .EX
 #include \f[B]<libpkgsource\-yaml/libpkgsource\-yaml.h>\f[R]
+\- profile: \f[CR]\(dq\(atcompiler\(dq\f[R]
 .EE
+Each profile key omits the leading \f[CR]\(at\f[R].
 .IP \(bu 2
 newer Pandoc bullet spelling
 .IP \[bu] 2
@@ -34,7 +36,9 @@ cat > "$expected" <<'EOF'
 .SH SYNOPSIS
 .EX
 #include <libpkgsource\-yaml/libpkgsource\-yaml.h>
+\- profile: \[dq]\[at]compiler\[dq]
 .EE
+Each profile key omits the leading \f[CR]\[at]\f[R].
 .IP \[bu] 2
 newer Pandoc bullet spelling
 .IP \[bu] 2
