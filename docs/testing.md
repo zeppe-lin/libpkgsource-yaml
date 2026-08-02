@@ -7,7 +7,7 @@ types into the grammar. It checks event ordering, one-based marks, scalar bytes,
 and scalar-limit enforcement.
 
 `provider-boundary` proves that libyaml headers, types, and functions appear only
-in the selected provider translation unit.
+in the libyaml provider translation unit.
 
 ## YAML subset behavior
 
@@ -44,8 +44,7 @@ duplicate source names.
 ## Public and ABI behavior
 
 Umbrella and component headers compile independently. Generated pkg-config
-metadata exposes `libpkgsource` publicly once and the selected YAML provider
-privately once.
+metadata exposes `libpkgsource` publicly once and libyaml privately once.
 
 The shared-library ABI test compares every dynamic symbol with
 `abi/libpkgsource-yaml.exports`. Private parser, provider, standard-library, and

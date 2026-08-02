@@ -56,7 +56,7 @@ sealing remain `pkgsource::error` and are not translated.
 
 # PROVIDER
 
-Only the selected private event provider knows libyaml types. Grammar behavior,
+Only the private libyaml event provider knows libyaml types. Grammar behavior,
 diagnostics, and public ABI remain provider-neutral.
 
 # AUTHORITY
@@ -70,8 +70,7 @@ library.
 # ABI
 
 The first public ABI is `libpkgsource-yaml.so.1`. Public headers expose no
-libyaml types. The library requires `libpkgsource` major API 3 and keeps the
-selected YAML provider private in pkg-config metadata.
+libyaml types. The library requires `libpkgsource` major API 3 and keeps libyaml private in pkg-config metadata.
 
 # SEE ALSO
 

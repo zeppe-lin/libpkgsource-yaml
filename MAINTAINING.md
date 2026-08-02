@@ -2,10 +2,10 @@
 
 ## Dependency discipline
 
-Release against a signed compatible `libpkgsource` tag and the qualified YAML
-provider version. Public headers may expose `libpkgsource` types but never
-provider types. Pkg-config must publish `libpkgsource` once in `Requires` and the
-selected provider once in `Requires.private`.
+Release against a signed compatible `libpkgsource` tag and the qualified
+libyaml version. Public headers may expose `libpkgsource` types but never
+provider types. Pkg-config must publish `libpkgsource` once in `Requires` and
+libyaml once in `Requires.private`.
 
 ## Protocol discipline
 
@@ -14,8 +14,9 @@ version requires a real installed population, a written compatibility policy,
 complete protocol specification, migration guidance, and tests for every
 accepted and rejected generation.
 
-Provider replacement is not permission to change accepted syntax or diagnostics.
-Run the normalized event and full grammar suites against every provider.
+Provider replacement is not permission to change accepted syntax or
+diagnostics. Introduce a build-time provider choice only after a second
+implementation passes the normalized-event and full grammar suites.
 
 ## Generated documentation
 
@@ -34,4 +35,5 @@ from canonical Markdown and installed public headers.
 6. Test installed shared and static consumers.
 7. Stage `doc`, `man`, and `html-docs` installation through `DESTDIR`.
 8. Replay the release series independently and compare the final tree.
-9. Tag only after all three coordinated source repositories remain green.
+9. Tag only after `libpkgsource`, `libpkgsource-yaml`, and
+   `libpkgsource-plan` remain green together.

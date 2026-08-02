@@ -14,20 +14,18 @@ fail()
 
 [ -s "$provider" ] || fail 'libyaml provider implementation is missing'
 grep -F '#include <yaml.h>' "$provider" >/dev/null ||
-  fail 'selected provider does not include libyaml explicitly'
+  fail 'libyaml provider does not include libyaml explicitly'
 
-matches=$(grep -R -l -E '#include <yaml\.h>|\byaml_(parser|event|char|mark|tag|version)' \
+# Match provider-owned libyaml declarations and calls, not project-owned names
+# such as yaml_event_reader or yaml_event_kind.
+matches=$(grep -R -l -E \
+  '#include <yaml\.h>|yaml_(parser_t|event_t|event_type_t|char_t)|yaml_(parser_initialize|parser_delete|parser_set_input_string|parser_parse|event_delete)|(^|[^A-Za-z0-9_])YAML_[A-Z0-9_]+' \
   "$root/src" "$root/include" || true)
 [ "$matches" = "$provider" ] || {
   printf '%s\n' "$matches" >&2
-  fail 'libyaml types or functions escaped the provider translation unit'
+  fail 'libyaml representation escaped the provider translation unit'
 }
 
-if grep -R -E 'yaml_parser_t|yaml_event_t|yaml_event_type_t' \
-    "$root/include" "$root/src/internal/document."* \
-    "$root/src/profiles.cpp" "$root/src/recipe.cpp" >/dev/null; then
-  fail 'provider representation escaped into grammar or public code'
+if grep -F "'yaml_provider'" "$root/meson.options" >/dev/null; then
+  fail 'one-choice YAML provider option exposes configuration theatre'
 fi
-
-grep -F "choices: ['libyaml']" "$root/meson.options" >/dev/null ||
-  fail 'qualified YAML provider selection is not explicit'

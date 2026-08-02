@@ -41,7 +41,7 @@ The value retains a stable \f[CR]yaml_error_code\f[R], caller\-supplied document
 A failure raised while constructing one core semantic value is translated to \f[CR]invalid_value\f[R] at its YAML location.
 Later failures from profile or source sealing remain \f[CR]pkgsource::error\f[R] and are not translated.
 .SH PROVIDER
-Only the selected private event provider knows libyaml types.
+Only the private libyaml event provider knows libyaml types.
 Grammar behavior, diagnostics, and public ABI remain provider\-neutral.
 .SH AUTHORITY
 Parsed declarations are not package\-source authority.
@@ -50,6 +50,6 @@ Aggregation, precedence, semantic normalization, identity, resolution, fetching,
 .SH ABI
 The first public ABI is \f[CR]libpkgsource\-yaml.so.1\f[R].
 Public headers expose no libyaml types.
-The library requires \f[CR]libpkgsource\f[R] major API 3 and keeps the selected YAML provider private in pkg\-config metadata.
+The library requires \f[CR]libpkgsource\f[R] major API 3 and keeps libyaml private in pkg\-config metadata.
 .SH SEE ALSO
 \f[CR]pkgsource_profiles_yaml(5)\f[R], \f[CR]pkgsource_recipe_yaml(5)\f[R]

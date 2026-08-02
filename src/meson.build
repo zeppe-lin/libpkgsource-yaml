@@ -3,17 +3,12 @@
 public_inc = include_directories('../include')
 internal_inc = include_directories('.')
 
-yaml_provider = get_option('yaml_provider')
-yaml_provider_sources = []
-yaml_provider_dependencies = []
-
-if yaml_provider == 'libyaml'
-  yaml_provider_sources += files('internal/yaml_event_reader_libyaml.cpp')
-  yaml_provider_dependencies += [libyaml_dep]
-else
-  error('unsupported YAML provider: ' + yaml_provider)
-endif
-
+# The current provider is an internal implementation choice. Introduce a
+# build option only after a second provider has passed the same normalization
+# and grammar contracts; a one-choice option would expose configuration without
+# offering a real choice.
+yaml_provider_sources = files('internal/yaml_event_reader_libyaml.cpp')
+yaml_provider_dependencies = [libyaml_dep]
 
 elf_export_generator = find_program(
   meson.project_source_root() / 'tools/generate-elf-export-script.sh',

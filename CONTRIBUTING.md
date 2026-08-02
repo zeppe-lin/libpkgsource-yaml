@@ -17,7 +17,7 @@ bodies always use braces. Public headers require complete Doxygen. Implementatio
 comments explain parser invariants and provider boundaries rather than narrating
 statements.
 
-Libyaml types and functions belong only in the selected provider translation
+Libyaml types and functions belong only in the libyaml provider translation
 unit. Generic document-tree and grammar code consume project-owned event types.
 
 ## Tests and documentation

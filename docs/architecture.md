@@ -25,8 +25,8 @@ libpkgsource sealing authority
 
 One parse call proceeds through four explicit layers:
 
-1. the selected YAML provider normalizes native events into project-owned event
-   kinds, marks, scalar bytes, tags, anchors, and directive presence;
+1. the private libyaml provider normalizes native events into project-owned
+   event kinds, marks, scalar bytes, tags, anchors, and directive presence;
 2. the document layer constructs a bounded scalar/sequence/mapping tree and
    rejects excluded YAML features;
 3. the profile or recipe grammar admits exact keys and translates fields into
@@ -38,14 +38,15 @@ The provider does not know profile or recipe keys. The grammar does not know
 
 ## Provider boundary
 
-The qualified provider is selected with `-Dyaml_provider=libyaml`. Only
-`src/internal/yaml_event_reader_libyaml.cpp` includes `<yaml.h>`.
+The current qualified provider is libyaml. Only
+`src/internal/yaml_event_reader_libyaml.cpp` includes `<yaml.h>`. The provider
+seam is internal; no one-choice build option is exposed.
 
-Provider replacement is an implementation change only when the complete
-normalized behavior remains identical: event order, scalar bytes, tags,
-directive reporting, source marks, syntax diagnostics, and resource failure
-placement. A provider that accepts a different YAML subset requires protocol
-review rather than a build-option substitution.
+Introduce provider selection only after a second implementation preserves the
+complete normalized behavior: event order, scalar bytes, tags, directive
+reporting, source marks, syntax diagnostics, and resource-failure placement. A
+provider that accepts a different YAML subset requires protocol review rather
+than a build-option substitution.
 
 ## Grammar ownership
 
@@ -86,7 +87,8 @@ ceilings:
 - nesting depth, counting the root as depth one.
 
 The defaults are operational bounds, not semantic maxima of the package model.
-Callers may choose different positive ceilings for their acquisition policy.
+Callers may choose any ceilings required by their acquisition policy. A zero
+ceiling is valid and excludes every non-empty use of that resource.
 
 ## Repository layout
 

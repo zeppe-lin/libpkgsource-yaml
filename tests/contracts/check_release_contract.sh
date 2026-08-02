@@ -19,8 +19,9 @@ grep -F "version: '>=3.0.0'" "$root/meson.build" >/dev/null ||
   fail 'libpkgsource dependency floor is not 3.0.0'
 grep -F 'requires: [libpkgsource_dep]' "$root/src/meson.build" >/dev/null ||
   fail 'pkg-config does not promote libpkgsource by dependency object'
-grep -F "choices: ['libyaml']" "$root/meson.options" >/dev/null ||
-  fail 'qualified YAML provider is not explicit'
+if grep -F "'yaml_provider'" "$root/meson.options" >/dev/null; then
+  fail 'release exposes a provider option without a second qualified provider'
+fi
 grep -F 'abi/libpkgsource-yaml.exports' "$root/src/meson.build" >/dev/null ||
   fail 'shared library does not consume the reviewed ABI manifest'
 [ -s "$root/abi/libpkgsource-yaml.exports" ] || fail 'ABI manifest is missing'

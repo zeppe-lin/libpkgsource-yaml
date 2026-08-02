@@ -34,7 +34,7 @@ entry points coordinate one document grammar. Generic document-tree handling,
 recipe field decoding, and libyaml event acquisition belong to separate
 internal units.
 
-Keep libyaml types and event layouts inside the selected provider translation
+Keep libyaml types and event layouts inside the libyaml provider translation
 unit. The grammar layer consumes provider-neutral events and owns all schema
 paths, accepted keys, and construction of parser-neutral declarations.
 

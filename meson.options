@@ -19,15 +19,6 @@ option(
   value: 'auto',
   description: 'Install generated manual pages',
 )
-
-option(
-  'yaml_provider',
-  type: 'combo',
-  choices: ['libyaml'],
-  value: 'libyaml',
-  description: 'Qualified YAML event provider',
-)
-
 option(
   'html_docs',
   type: 'feature',
