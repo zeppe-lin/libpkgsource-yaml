@@ -1,7 +1,4 @@
-<!-- SPDX-FileCopyrightText: 2026 Alexandr Savca -->
-<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
-
-# `profiles.yml/1` input protocol
+# Profiles YAML version 1
 
 `zeppe-lin.profiles/1` declares named requirement profiles. The parser returns
 `profile_declaration` values; only a later `profile_catalog::seal()` result is

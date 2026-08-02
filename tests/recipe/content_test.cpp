@@ -71,7 +71,7 @@ void parsed_declaration_seals_complete_source_authority()
                 "runtime requirements must seal");
   require_equal(recipe.check_requirements().size(), std::size_t{1},
                 "check requirements must seal");
-  require(recipe.check_program() != nullptr, "check program must seal");
+  require(recipe.check_program().has_value(), "check program must seal");
   require_equal(
       recipe.lifecycle_requirements(
           pkgsource::lifecycle_action::post_install)
@@ -125,7 +125,7 @@ check: {language: posix-shell, script: "true\n"}
           pkgsource::source_origin("recipe.yml")),
       catalog);
 
-  require(snapshot.recipe().check_program() != nullptr,
+  require(snapshot.recipe().check_program().has_value(),
           "check program must be present");
   require(snapshot.recipe().check_requirements().empty(),
           "check requirements may remain empty");

@@ -1,92 +1,132 @@
-# Design
-
-## Purpose
-
-`libpkgsource-yaml` translates one strict YAML document into parser-neutral
-`libpkgsource` declarations. It is a syntax adapter, not a source-authority
-library.
-
-The repository is separate because YAML grammar, libyaml integration, parser
-resource policy, diagnostics, and document-version evolution are independent
-from semantic source sealing and from planner projection.
+# Architecture
 
 ## Authority boundary
 
-The parser owns:
+`libpkgsource-yaml` owns document syntax, bounded parsing, schema diagnostics,
+and translation into parser-neutral `libpkgsource` declarations.
 
-- accepted YAML structure and field spelling;
-- mapping from document fields to `libpkgsource` declaration constructors;
-- document, schema-path, line, and column diagnostics;
-- parser resource ceilings;
-- rejection of unsupported YAML features and schema drift.
+`libpkgsource` owns semantic value domains, profile sealing, source sealing,
+normalization, and identities. The parser never becomes a second semantic
+authority.
 
-The parser does not own:
-
-- package, profile, program, source, or architecture semantic validity beyond
-  construction of the corresponding core value;
-- profile expansion, duplicate semantic declaration detection, cycle checks,
-  requirement normalization, lifecycle binding, or source identities;
-- file access, collection discovery, precedence, or document aggregation;
-- dependency resolution, source acquisition, execution, planning, or storage.
-
-A parsed value remains a declaration. Authority begins only when the caller
-passes it to `profile_catalog::seal()` or `seal_source()`.
-
-## API shape
-
-The public API has one unversioned operation per currently published document
-kind:
-
-```cpp
-std::vector<profile_declaration> parse_profiles_yaml(...);
-recipe_declaration parse_recipe_yaml(...);
+```text
+caller-owned YAML bytes
+          |
+          | libpkgsource-yaml
+          v
+parser-neutral declarations
+          |
+          | explicit caller composition
+          v
+libpkgsource sealing authority
 ```
 
-Document protocol versions remain explicit inside the document through the
-`format` field. They are not copied into C++ function names. A future protocol
-version is admitted only when an installed population requires evolution and
-its compatibility policy has been designed; it is not created to preserve
-unreleased experiments.
+## Parser pipeline
 
-The parser deliberately provides no `parse_and_seal` convenience function.
-Keeping the composition visible prevents syntax code from becoming an alternate
-semantic authority and lets callers aggregate multiple profile documents before
-one explicit sealing operation.
+One parse call proceeds through four explicit layers:
+
+1. the selected YAML provider normalizes native events into project-owned event
+   kinds, marks, scalar bytes, tags, anchors, and directive presence;
+2. the document layer constructs a bounded scalar/sequence/mapping tree and
+   rejects excluded YAML features;
+3. the profile or recipe grammar admits exact keys and translates fields into
+   `libpkgsource` declaration constructors;
+4. the public entry point returns declarations without sealing them.
+
+The provider does not know profile or recipe keys. The grammar does not know
+`yaml_parser_t`, `yaml_event_t`, or provider enum values.
+
+## Provider boundary
+
+The qualified provider is selected with `-Dyaml_provider=libyaml`. Only
+`src/internal/yaml_event_reader_libyaml.cpp` includes `<yaml.h>`.
+
+Provider replacement is an implementation change only when the complete
+normalized behavior remains identical: event order, scalar bytes, tags,
+directive reporting, source marks, syntax diagnostics, and resource failure
+placement. A provider that accepts a different YAML subset requires protocol
+review rather than a build-option substitution.
+
+## Grammar ownership
+
+`profiles.cpp` owns the top-level profile-document grammar.
+
+`recipe.cpp` owns top-level recipe assembly. Field-specific recipe decoding is
+isolated under `src/internal/recipe_fields.cpp` so package metadata,
+requirements, source locators, programs, lifecycle actions, and architectures
+can be reviewed independently from orchestration.
+
+Generic path construction, mapping-key checks, node-kind checks, provenance,
+and translation of individual `libpkgsource` constructor failures live in the
+document layer.
 
 ## Error model
 
-`yaml_error` reports parser and schema failures with:
+`yaml_error` carries:
 
 - a stable `yaml_error_code`;
-- the caller-supplied document name;
-- a schema path;
+- the caller-supplied document label;
+- a protocol path;
 - a one-based line and column;
-- a human-readable diagnostic.
+- human-readable diagnostic text.
 
-Errors raised while constructing an individual `libpkgsource` semantic value
-are translated to `invalid_value` at the exact YAML location. Errors raised by
-later profile or source sealing are not translated.
+The `what()` message is not a stable machine interface. Parser code translates
+only `pkgsource::error` raised while constructing the specific declaration value
+at one YAML location. Allocation failures, logic failures, and errors from later
+semantic sealing retain their original types.
 
 ## Resource model
 
-The parser operates on caller-owned in-memory bytes and applies four explicit
+The parser operates on caller-owned in-memory bytes and applies four inclusive
 ceilings:
 
-- maximum document bytes before libyaml is entered;
-- maximum bytes in any scalar event;
-- maximum scalar, sequence, and mapping nodes;
-- maximum node nesting depth, with the root at depth one.
+- total document bytes before the provider is entered;
+- bytes retained from one scalar event;
+- scalar, sequence, and mapping nodes retained in the document tree;
+- nesting depth, counting the root as depth one.
 
-The defaults are conservative operational bounds, not semantic limits of the
-package model. Callers may select smaller or larger positive ceilings for their
-acquisition policy. Reaching a ceiling fails closed with `resource_limit`.
+The defaults are operational bounds, not semantic maxima of the package model.
+Callers may choose different positive ceilings for their acquisition policy.
 
-The document-byte bound limits total input and therefore bounds scanner input.
-The scalar, node, and depth bounds additionally constrain parser amplification
-and the library's retained tree.
+## Repository layout
 
-## Dependency boundary
+```text
+include/libpkgsource-yaml/   installed public API
+src/                        public parser entry points
+src/internal/               provider, document tree, and grammar helpers
+abi/                        reviewed ELF export manifest
+docs/protocols/             document protocol specifications
+docs/man/                   canonical manual sources and generated roff
+tests/parser/               provider-neutral YAML subset and limits
+tests/profiles/             profile grammar contracts
+tests/recipe/               recipe grammar contracts
+tests/integration/          explicit semantic-sealing handoff
+tests/internal/             provider normalization contracts
+tests/contracts/            repository, ABI, metadata, and documentation gates
+tools/                      deterministic generation and installation tools
+```
 
-The shared library has public dependency on the matching `libpkgsource` major
-API and private dependency on libyaml. Public headers expose no libyaml types.
-The core `libpkgsource` repository has no reverse dependency on this library.
+## Installed documentation
+
+Canonical Markdown, protocol specifications, legal files, and manual sources
+are installed under `share/doc/libpkgsource-yaml`. Generated roff is installed
+under `share/man`.
+
+The source-document installation list is explicit. A new file under `docs/`
+does not become a published contract accidentally.
+
+## HTML publication boundary
+
+With `html_docs` enabled, Pandoc renders repository documentation and Doxygen
+renders the installed public API into a versioned static tree. The repository
+checks local links and rejects escaped source/build paths before installation.
+
+The website consumes that generated tree as an opaque artifact. It does not
+rerun the parser documentation toolchain or become another documentation
+source of truth.
+
+## Excluded authority
+
+The library does not own file access, collection discovery, profile aggregation,
+semantic sealing, source identities, dependency resolution, acquisition,
+execution, planning, transaction construction, or evidence storage.

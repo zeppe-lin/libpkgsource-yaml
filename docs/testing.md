@@ -1,50 +1,70 @@
 # Testing
 
-The suite qualifies the parser as an independent syntax boundary.
+## Provider behavior
 
-## Functional tests
+`provider-events` binds libyaml event normalization without importing libyaml
+types into the grammar. It checks event ordering, one-based marks, scalar bytes,
+and scalar-limit enforcement.
 
-`profiles` proves:
+`provider-boundary` proves that libyaml headers, types, and functions appear only
+in the selected provider translation unit.
 
-- complete declaration construction and exact diagnostic provenance;
-- order-independent semantic sealing when the declarations are passed to
-  `libpkgsource`;
-- duplicate keys, unknown keys, directives, anchors, aliases, merge keys,
-  custom tags, multiple documents, complex mapping keys, empty documents, type
-  drift, format drift, and invalid semantic values are rejected.
+## YAML subset behavior
 
-`recipe` proves:
+`parser-subset` covers duplicate keys, unknown keys, directives, anchors,
+aliases, merge keys, custom tags, multiple and empty documents, complex mapping
+keys, and provider syntax failures.
 
-- complete recipe/1 construction, including build, check, lifecycle, source,
-  architecture, metadata, and requirement declarations;
-- optional check programs and exact program bytes;
-- equivalent YAML ordering produces equivalent sealed source identity;
-- schema failures are parser errors while lifecycle/check/source-set invariants
-  remain core sealing errors.
+`parser-limits` varies document bytes, scalar bytes, node count, and depth
+independently. Each test proves rejection beyond a ceiling and acceptance at the
+exact ceiling.
 
-`limits` proves independent document-byte, scalar-byte, node-count, and depth
-ceilings and acceptance at an exact configured boundary.
+## Profile grammar behavior
 
-## Boundary tests
+`profiles-content` checks declaration material, exact provenance, caller-visible
+document order, and integration with profile sealing.
 
-`parser-boundary` statically rejects calls from this repository into
-`seal_source()`, `seal_recipe()`, or `profile_catalog::seal()`. It also rejects
-experimental versioned API names and removed syntax-authority types.
+`profiles-schema` checks the protocol version, root type, profile-name values,
+non-empty declarations, and explicit member subjects.
 
-`public-headers` compiles the installed umbrella header without private parser
-or libyaml headers.
+## Recipe grammar behavior
 
-`metadata` validates project version, SONAME-facing link name, one public
-`libpkgsource >= 3.0.0` requirement, and one private `yaml-0.1 >= 0.2.5`
-requirement.
+`recipe-content` checks every major declaration group, exact program bytes,
+optional check execution, and integration with source sealing. Reordered YAML is
+sealed to the same source identity.
 
-## Required release matrix
+`recipe-schema` checks protocol version, required and unknown keys, canonical
+release integers, explicit requirement subjects, lifecycle action names, and
+program language.
 
-Before release, run clean shared and static builds with GCC and Clang, warnings
-as errors, and all tests enabled. Run ASan and UBSan over the functional suite.
-Render the scdoc manuals and lint them with mandoc. Inspect shared-library
-`SONAME` and `NEEDED` entries and compile an installed external consumer using
-pkg-config.
+`sealing-integration` proves which invariants remain owned by `libpkgsource`:
+lifecycle requirement/program binding, check requirement/program binding, and
+duplicate source names.
 
-The static package must carry the complete private libyaml closure through
-`pkg-config --static` without exposing libyaml types in public headers.
+## Public and ABI behavior
+
+Umbrella and component headers compile independently. Generated pkg-config
+metadata exposes `libpkgsource` publicly once and the selected YAML provider
+privately once.
+
+The shared-library ABI test compares every dynamic symbol with
+`abi/libpkgsource-yaml.exports`. Private parser, provider, standard-library, and
+template symbols must not escape.
+
+## Documentation behavior
+
+Contracts enforce ATX Markdown, the restricted man-page profile, generated-roff
+drift checks, installed source documentation, generated HTML structure, local
+links, and `DESTDIR` staging.
+
+## Release qualification
+
+Before tagging, run clean shared and static builds with GCC and Clang, warnings
+as errors, and the complete test suite. Run ASan and UBSan over functional and
+provider tests. Run Doxygen with warnings as errors, regenerate manuals with a
+qualified Pandoc 3.x writer, lint roff with mandoc, and validate the versioned
+HTML tree.
+
+Inspect shared `SONAME` and `NEEDED` entries. Compile installed shared and static
+consumers through pkg-config. Replay the patch series independently and compare
+the resulting tree.

@@ -1,12 +1,14 @@
 # libpkgsource-yaml
 
-`libpkgsource-yaml` is the strict YAML syntax frontend for native Zeppe-Lin
-package-source declarations.
+`libpkgsource-yaml` is the strict, bounded YAML syntax frontend for native
+Zeppe-Lin package-source declarations.
 
 The library accepts caller-owned document bytes and returns parser-neutral
 `libpkgsource` declarations. It does not open files, discover collections,
-combine profile documents, seal semantic authority, resolve requirements, fetch
-sources, or execute programs.
+combine documents, seal semantic authority, resolve requirements, fetch
+sources, execute programs, plan transactions, or store evidence.
+
+## Protocols
 
 The first public release owns two input protocols:
 
@@ -14,41 +16,58 @@ The first public release owns two input protocols:
 - `zeppe-lin.recipe/1` for complete package-source declarations, including an
   optional check program.
 
-The experimental distinction between recipe versions one and two existed only
-inside the pre-release `libpkgsource` repository. It is deliberately not
-published here as compatibility history.
+The experimental recipe-generation split from the pre-release in-tree parser is
+not published as compatibility history.
 
-## Public boundary
+## Public API
 
 ```cpp
 #include <libpkgsource-yaml/libpkgsource-yaml.h>
 
 auto declarations = pkgsource::yaml::parse_profiles_yaml(
-    bytes, pkgsource::source_origin("profiles.yml"));
+    profile_bytes, pkgsource::source_origin("profiles.yml"));
 auto profiles = pkgsource::profile_catalog::seal(std::move(declarations));
 
 auto declaration = pkgsource::yaml::parse_recipe_yaml(
     recipe_bytes, pkgsource::source_origin("recipe.yml"));
 auto snapshot = pkgsource::seal_source(
     pkgsource::source_origin("recipe.yml"),
-    std::move(declaration), profiles);
+    std::move(declaration),
+    profiles);
 ```
 
-Parsing and semantic sealing are intentionally separate calls. Parser failures
-are `pkgsource::yaml::yaml_error` values with stable categories and exact
-one-based source locations. Sealing failures remain `pkgsource::error` values
-owned by `libpkgsource`.
+Parsing and semantic sealing remain explicit, separate calls. Parser failures
+are `pkgsource::yaml::yaml_error` values with stable categories, schema paths,
+and one-based source locations. Sealing failures remain `pkgsource::error`
+values owned by `libpkgsource`.
 
 ## Strictness and bounds
 
 The parser rejects duplicate and unknown keys, non-scalar mapping keys,
-multiple documents, directives, anchors, aliases, merge keys, custom or
-kind-incompatible tags, scalar requirement shorthand, and schema drift.
+multiple or empty documents, directives, anchors, aliases, merge keys, custom
+or kind-incompatible tags, scalar requirement shorthand, and protocol drift.
 
-Every call is bounded by `parse_limits`: total input bytes, scalar bytes, parsed
-node count, and nesting depth. The library does not expose libyaml types in its
-public ABI.
+Each call is bounded by `parse_limits`: total document bytes, bytes in one
+scalar, retained node count, and node depth. All ceilings are inclusive.
 
-See `docs/architecture.md`, `docs/protocols/profiles-yaml-v1.md`,
-`docs/protocols/recipe-yaml-v1.md`, and `docs/testing.md` for the
-normative ownership and qualification contracts.
+## Provider boundary
+
+Grammar and diagnostics are provider-neutral. Only
+`src/internal/yaml_event_reader_libyaml.cpp` knows libyaml types and event
+layouts. Replacing the event provider must preserve the normalized event and
+error contract; changing the accepted YAML subset or document grammar is a
+protocol change.
+
+## Documentation
+
+Canonical project documentation is installed under
+`share/doc/libpkgsource-yaml`. Generated manual pages are installed under the
+normal man hierarchy.
+
+With `-Dhtml_docs=enabled`, the repository also generates a versioned static
+artifact under `share/htmldocs/libpkgsource-yaml/1.0.0`. The project repository
+owns generation; a website may publish the resulting tree without rebuilding
+or reinterpreting it.
+
+See `docs/architecture.md`, `docs/protocols/`, and `docs/testing.md` for the
+normative boundaries and qualification model.

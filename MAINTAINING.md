@@ -1,18 +1,37 @@
-<!-- SPDX-FileCopyrightText: 2026 Alexandr Savca -->
-<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+# Maintaining libpkgsource-yaml
 
-# Maintaining
+## Dependency discipline
 
-Release only against a signed compatible `libpkgsource` tag. The parser library
-has its own project version and SONAME; it does not advance merely because the
-core releases.
+Release against a signed compatible `libpkgsource` tag and the qualified YAML
+provider version. Public headers may expose `libpkgsource` types but never
+provider types. Pkg-config must publish `libpkgsource` once in `Requires` and the
+selected provider once in `Requires.private`.
 
-Before tagging, qualify GCC and Clang, shared and static linkage, parser limits,
-malformed-input coverage, generated metadata, installed consumers, manual pages,
-and exact patch replay. Confirm that the public library links libyaml privately
-and that no sealing symbol is exported or referenced.
+## Protocol discipline
 
-`PROFILES-YAML.md` and `RECIPE-YAML.md` are normative grammar documents. Keep
-them synchronized with parser behavior and corpus tests. Diagnostics may retain
-document coordinates, but spelling and location never become source semantic
-identity.
+Do not create a new document version to preserve unreleased experiments. A new
+version requires a real installed population, a written compatibility policy,
+complete protocol specification, migration guidance, and tests for every
+accepted and rejected generation.
+
+Provider replacement is not permission to change accepted syntax or diagnostics.
+Run the normalized event and full grammar suites against every provider.
+
+## Generated documentation
+
+Markdown under `docs/` is canonical. Regenerate committed roff with
+`tools/update-man-pages.sh --write`. HTML is a versioned derived artifact built
+from canonical Markdown and installed public headers.
+
+## Release checklist
+
+1. Build shared and static closures with GCC and Clang.
+2. Run all tests with warnings as errors.
+3. Run GCC and Clang ASan/UBSan jobs.
+4. Run clang-format 17, Doxygen, Pandoc regeneration, mandoc lint, and HTML link
+   validation.
+5. Inspect pkg-config, SONAME, `NEEDED`, and the exact ABI manifest.
+6. Test installed shared and static consumers.
+7. Stage `doc`, `man`, and `html-docs` installation through `DESTDIR`.
+8. Replay the release series independently and compare the final tree.
+9. Tag only after all three coordinated source repositories remain green.

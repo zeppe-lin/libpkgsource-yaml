@@ -1,7 +1,4 @@
-<!-- SPDX-FileCopyrightText: 2026 Alexandr Savca -->
-<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
-
-# `recipe.yml/1` input protocol
+# Recipe YAML version 1
 
 `zeppe-lin.recipe/1` declares one complete native package source. The parser
 returns a `recipe_declaration`; only `libpkgsource::seal_source()` with an

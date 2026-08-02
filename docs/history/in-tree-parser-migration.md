@@ -1,52 +1,31 @@
-# Migration from the in-tree adapter
+# In-tree parser migration
 
-The YAML component formerly shipped as an optional library inside the
-pre-release `libpkgsource` repository. The independent `libpkgsource-yaml 1.0.0`
-release intentionally resets that experimental API.
+## Origin
 
-## Build metadata
+The implementation began as the optional `libpkgsource-yaml` target inside the
+pre-release `libpkgsource` repository. It was extracted because document syntax,
+libyaml integration, parser resource policy, diagnostics, and protocol evolution
+have a separate dependency and release lifecycle from semantic source authority.
 
-Consumers now depend directly on:
+## Preserved behavior
 
-```text
-libpkgsource-yaml >= 1.0.0
-libpkgsource >= 3.0.0
-```
+The extraction preserved the accepted `zeppe-lin.profiles/1` and
+`zeppe-lin.recipe/1` grammars, declaration construction, source locations,
+strict YAML subset, and explicit parser resource ceilings.
 
-The installed library is `libpkgsource-yaml.so.1` and the pkg-config module is
-`libpkgsource-yaml`.
+The standalone library continues to return declarations only. Callers retain
+visible responsibility for profile aggregation and semantic sealing.
 
-## Namespace and entry points
+## Removed development history
 
-Replace `pkgsource::yaml_adapter` with `pkgsource::yaml`.
-
-Replace versioned parsed-document and convenience-sealing calls with the two
-parser-only entry points:
-
-```cpp
-parse_profiles_yaml(bytes, origin)
-parse_recipe_yaml(bytes, origin)
-```
-
-The returned values are declarations. Call `profile_catalog::seal()` and
-`seal_source()` explicitly in the component that owns aggregation and
-composition.
-
-## Recipe protocol
-
-Use:
-
-```yaml
-format: zeppe-lin.recipe/1
-```
-
-The first published recipe/1 protocol includes the optional root `check`
-program. Do not emit `zeppe-lin.recipe/2`; that spelling represented an
-unreleased in-repository experiment and has no compatibility status.
+The in-tree parser briefly distinguished experimental recipe generations before
+any package population depended on them. The standalone first release publishes
+one `zeppe-lin.recipe/1` grammar containing the current optional check program.
+It does not ship an unused compatibility decoder or versioned C++ function
+names.
 
 ## No compatibility layer
 
-There are no aliases for the old namespace, no `_v1` or `_v2` C++ entry points,
-no parsed-document wrappers, and no parser convenience functions that seal
-source authority. Pre-release consumers must migrate atomically with
-`libpkgsource 3.0.0`.
+No installed standalone ABI or package population existed before this split.
+The initial repository therefore contains no forwarding headers, compatibility
+libraries, deprecated entry points, or alternate document generation.

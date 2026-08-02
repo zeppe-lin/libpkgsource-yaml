@@ -2,6 +2,18 @@
 
 ## 1.0.0
 
+House engineering cleanup before publication.
+
+- Isolated libyaml event acquisition behind a provider-neutral internal API.
+- Separated document-tree handling, recipe field decoding, and public grammar
+  orchestration.
+- Added explicit public symbol visibility and a reviewed ELF ABI manifest.
+- Reorganized tests by provider, parser subset, grammar, semantic handoff, and
+  repository contract.
+- Standardized code style, Doxygen, canonical Markdown manuals, installed
+  documentation, and versioned HTML generation.
+
+
 First independent YAML frontend release.
 
 - Extracted the YAML implementation, format contracts, manuals, and tests from
