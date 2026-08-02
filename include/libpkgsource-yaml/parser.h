@@ -19,11 +19,15 @@
 #include <string_view>
 #include <vector>
 
+/**
+ * @namespace pkgsource::yaml
+ * @brief Strict YAML syntax parsing into parser-neutral libpkgsource values.
+ */
 namespace pkgsource::yaml {
 
 /** Stable parser failure categories. */
 enum class yaml_error_code {
-  /** The selected YAML provider rejected malformed input. */
+  /** The private YAML provider rejected malformed input. */
   syntax,
   /** The document uses YAML features excluded by the protocol subset. */
   unsupported_feature,
@@ -64,14 +68,18 @@ struct parse_limits final {
  * Structured parser failure with stable category and source provenance.
  *
  * The human-readable `what()` string is diagnostic text, not a stable machine
- * interface. Callers should branch on code() and use document(), path(), line(),
- * and column() for reporting.
+ * interface. Callers should branch on code() and use document(), path(),
+ * line(), and column() for reporting.
  */
 class PKGSOURCE_YAML_API yaml_error final : public std::runtime_error {
 public:
   /** Construct one parser failure. */
-  yaml_error(yaml_error_code code, std::string document, std::string path,
-             std::uint32_t line, std::uint32_t column, std::string message);
+  yaml_error(yaml_error_code code,
+             std::string document,
+             std::string path,
+             std::uint32_t line,
+             std::uint32_t column,
+             std::string message);
   ~yaml_error() override;
 
   /** Return the stable parser failure category. */
@@ -109,7 +117,8 @@ private:
  * `pkgsource::profile_catalog::seal()`.
  */
 [[nodiscard]] PKGSOURCE_YAML_API std::vector<profile_declaration>
-parse_profiles_yaml(std::string_view bytes, source_origin origin,
+parse_profiles_yaml(std::string_view bytes,
+                    source_origin origin,
                     const parse_limits& limits = {});
 
 /**
@@ -127,8 +136,9 @@ parse_profiles_yaml(std::string_view bytes, source_origin origin,
  * resulting declaration and the selected profile catalog to
  * `pkgsource::seal_source()`.
  */
-[[nodiscard]] PKGSOURCE_YAML_API recipe_declaration parse_recipe_yaml(
-    std::string_view bytes, source_origin origin,
-    const parse_limits& limits = {});
+[[nodiscard]] PKGSOURCE_YAML_API recipe_declaration
+parse_recipe_yaml(std::string_view bytes,
+                  source_origin origin,
+                  const parse_limits& limits = {});
 
 } // namespace pkgsource::yaml

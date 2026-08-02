@@ -3,13 +3,13 @@
 #pragma once
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-  #if defined(PKGSOURCE_YAML_BUILDING_LIBRARY)
-    #define PKGSOURCE_YAML_API __declspec(dllexport)
-  #else
-    #define PKGSOURCE_YAML_API __declspec(dllimport)
-  #endif
-#elif defined(__GNUC__) || defined(__clang__)
-  #define PKGSOURCE_YAML_API __attribute__((visibility("default")))
+#if defined(PKGSOURCE_YAML_BUILDING_LIBRARY)
+#define PKGSOURCE_YAML_API __declspec(dllexport)
 #else
-  #define PKGSOURCE_YAML_API
+#define PKGSOURCE_YAML_API __declspec(dllimport)
+#endif
+#elif defined(__GNUC__) || defined(__clang__)
+#define PKGSOURCE_YAML_API __attribute__((visibility("default")))
+#else
+#define PKGSOURCE_YAML_API
 #endif

@@ -8,26 +8,39 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 namespace pkgsource::yaml::internal {
+namespace {
 
-std::uint32_t release_value(const node& value, const source_origin& origin,
+constexpr std::string_view posix_shell_language = "posix-shell";
+
+std::uint32_t release_value(const node& value,
+                            const source_origin& origin,
                             const std::string& path)
 {
   const std::string& text = scalar_value(value, origin, path);
-  if (text.empty() || (text.size() > 1 && text.front() == '0'))
-    fail(yaml_error_code::invalid_value, origin, path, value.mark,
+  if (text.empty() || (text.size() > 1 && text.front() == '0')) {
+    fail(yaml_error_code::invalid_value,
+         origin,
+         path,
+         value.mark,
          "release must be a canonical positive decimal integer");
+  }
+
   std::uint64_t parsed = 0;
-  const auto result = std::from_chars(text.data(), text.data() + text.size(),
-                                      parsed, 10);
-  if (result.ec != std::errc() || result.ptr != text.data() + text.size()
-      || parsed == 0
-      || parsed > std::numeric_limits<std::uint32_t>::max())
-    fail(yaml_error_code::invalid_value, origin, path, value.mark,
+  const auto result =
+      std::from_chars(text.data(), text.data() + text.size(), parsed, 10);
+  if (result.ec != std::errc() || result.ptr != text.data() + text.size() ||
+      parsed == 0 || parsed > std::numeric_limits<std::uint32_t>::max()) {
+    fail(yaml_error_code::invalid_value,
+         origin,
+         path,
+         value.mark,
          "release must be a canonical positive decimal integer");
+  }
   return static_cast<std::uint32_t>(parsed);
 }
 
@@ -36,43 +49,42 @@ lifecycle_action action_value(std::string_view text,
                               const std::string& path,
                               const node& value)
 {
-  if (text == "pre-install") return lifecycle_action::pre_install;
-  if (text == "post-install") return lifecycle_action::post_install;
-  if (text == "pre-remove") return lifecycle_action::pre_remove;
-  if (text == "post-remove") return lifecycle_action::post_remove;
-  fail(yaml_error_code::invalid_value, origin, path, value.mark,
+  if (text == "pre-install") {
+    return lifecycle_action::pre_install;
+  }
+  if (text == "post-install") {
+    return lifecycle_action::post_install;
+  }
+  if (text == "pre-remove") {
+    return lifecycle_action::pre_remove;
+  }
+  if (text == "post-remove") {
+    return lifecycle_action::post_remove;
+  }
+
+  fail(yaml_error_code::invalid_value,
+       origin,
+       path,
+       value.mark,
        "invalid lifecycle action: " + std::string(text));
 }
 
-program program_value(const node& value, const source_origin& origin,
-                      const std::string& path)
-{
-  allow_keys(value, origin, path, {"language", "script"});
-  const node& language_node = required_key(value, "language", origin, path);
-  const node& script_node = required_key(value, "script", origin, path);
-  const std::string language_path = child_path(path, "language");
-  const std::string script_path = child_path(path, "script");
-  if (scalar_value(language_node, origin, language_path) != "posix-shell")
-    fail(yaml_error_code::invalid_value, origin, language_path,
-         language_node.mark, "language must be exactly posix-shell");
-  const std::string material = scalar_value(script_node, origin, script_path);
-  return semantic_value(origin, script_path, script_node, [&] {
-    return program(program_language::posix_shell, material);
-  });
-}
-
-std::vector<requirement_declaration> requirement_sequence(
-    const node& value, const source_origin& origin, const std::string& path,
-    const requirement_scope& scope)
+std::vector<requirement_declaration>
+requirement_sequence(const node& value,
+                     const source_origin& origin,
+                     const std::string& path,
+                     const requirement_scope& scope)
 {
   const auto& entries = sequence_value(value, origin, path);
   std::vector<requirement_declaration> result;
   result.reserve(entries.size());
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const std::string item_path = path + "[" + std::to_string(i) + "]";
-    requirement_subject subject = subject_value(entries[i], origin, item_path);
-    result.emplace_back(scope, std::move(subject),
-                        provenance(origin, item_path, entries[i]));
+  for (std::size_t index = 0; index < entries.size(); ++index) {
+    const std::string item_path = path + "[" + std::to_string(index) + "]";
+    requirement_subject subject =
+        subject_value(entries[index], origin, item_path);
+    result.emplace_back(scope,
+                        std::move(subject),
+                        provenance(origin, item_path, entries[index]));
   }
   return result;
 }
@@ -85,89 +97,136 @@ void append_requirements(std::vector<requirement_declaration>& target,
                 std::make_move_iterator(values.end()));
 }
 
-std::vector<requirement_declaration> requirements_value(
-    const node& value, const source_origin& origin,
-    const std::string& path)
-{
-  allow_keys(value, origin, path, {"build", "run", "check", "lifecycle"});
-  std::vector<requirement_declaration> result;
-  if (const node* build = find_key(value, "build"))
-    append_requirements(result, requirement_sequence(
-        *build, origin, child_path(path, "build"), requirement_scope::build()));
-  if (const node* run = find_key(value, "run"))
-    append_requirements(result, requirement_sequence(
-        *run, origin, child_path(path, "run"), requirement_scope::run()));
-  if (const node* check = find_key(value, "check"))
-    append_requirements(result, requirement_sequence(
-        *check, origin, child_path(path, "check"), requirement_scope::check()));
-  if (const node* lifecycle = find_key(value, "lifecycle")) {
-    const std::string lifecycle_path = child_path(path, "lifecycle");
-    require_kind(*lifecycle, node_kind::mapping, origin, lifecycle_path,
-                 lifecycle_path);
-    for (std::size_t i = 0; i < lifecycle->children.size(); i += 2) {
-      const node& key = lifecycle->children[i];
-      const node& subjects = lifecycle->children[i + 1];
-      const std::string action_path = child_path(lifecycle_path, key.scalar);
-      const lifecycle_action action = action_value(
-          key.scalar, origin, action_path, key);
-      append_requirements(result, requirement_sequence(
-          subjects, origin, action_path,
-          requirement_scope::lifecycle(action)));
-    }
-  }
-  return result;
-}
-
-std::vector<lifecycle_program> lifecycle_value(
-    const node& value, const source_origin& origin,
-    const std::string& path)
-{
-  require_kind(value, node_kind::mapping, origin, path, path);
-  std::vector<lifecycle_program> result;
-  result.reserve(value.children.size() / 2);
-  for (std::size_t i = 0; i < value.children.size(); i += 2) {
-    const node& key = value.children[i];
-    const node& program_node = value.children[i + 1];
-    const std::string action_path = child_path(path, key.scalar);
-    const lifecycle_action action = action_value(
-        key.scalar, origin, action_path, key);
-    result.emplace_back(action,
-                        program_value(program_node, origin, action_path));
-  }
-  return result;
-}
-
 std::vector<architecture_reference> architecture_sequence(
-    const node& value, const source_origin& origin,
-    const std::string& path)
+    const node& value, const source_origin& origin, const std::string& path)
 {
   const auto& entries = sequence_value(value, origin, path);
   std::vector<architecture_reference> result;
   result.reserve(entries.size());
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const std::string item_path = path + "[" + std::to_string(i) + "]";
-    const std::string name = scalar_value(entries[i], origin, item_path);
-    result.push_back(semantic_value(origin, item_path, entries[i], [&] {
+  for (std::size_t index = 0; index < entries.size(); ++index) {
+    const std::string item_path = path + "[" + std::to_string(index) + "]";
+    const std::string name = scalar_value(entries[index], origin, item_path);
+    result.push_back(semantic_value(origin, item_path, entries[index], [&] {
       return architecture_reference(name);
     }));
   }
   return result;
 }
 
-architecture_requirements architectures_value(
-    const node* value, const source_origin& origin)
+} // namespace
+
+program program_value(const node& value,
+                      const source_origin& origin,
+                      const std::string& path)
 {
-  if (!value)
+  allow_keys(value, origin, path, {"language", "script"});
+  const node& language_node = required_key(value, "language", origin, path);
+  const node& script_node = required_key(value, "script", origin, path);
+  const std::string language_path = child_path(path, "language");
+  const std::string script_path = child_path(path, "script");
+
+  if (scalar_value(language_node, origin, language_path) !=
+      posix_shell_language) {
+    fail(yaml_error_code::invalid_value,
+         origin,
+         language_path,
+         language_node.mark,
+         "language must be exactly posix-shell");
+  }
+
+  const std::string material = scalar_value(script_node, origin, script_path);
+  return semantic_value(origin, script_path, script_node, [&] {
+    return program(program_language::posix_shell, material);
+  });
+}
+
+std::vector<requirement_declaration> requirements_value(
+    const node& value, const source_origin& origin, const std::string& path)
+{
+  allow_keys(value, origin, path, {"build", "run", "check", "lifecycle"});
+  std::vector<requirement_declaration> result;
+
+  if (const node* build = find_key(value, "build")) {
+    append_requirements(result,
+                        requirement_sequence(*build,
+                                             origin,
+                                             child_path(path, "build"),
+                                             requirement_scope::build()));
+  }
+  if (const node* run = find_key(value, "run")) {
+    append_requirements(
+        result,
+        requirement_sequence(
+            *run, origin, child_path(path, "run"), requirement_scope::run()));
+  }
+  if (const node* check = find_key(value, "check")) {
+    append_requirements(result,
+                        requirement_sequence(*check,
+                                             origin,
+                                             child_path(path, "check"),
+                                             requirement_scope::check()));
+  }
+  if (const node* lifecycle = find_key(value, "lifecycle")) {
+    const std::string lifecycle_path = child_path(path, "lifecycle");
+    require_kind(
+        *lifecycle, node_kind::mapping, origin, lifecycle_path, lifecycle_path);
+    for (std::size_t index = 0; index < lifecycle->children.size();
+         index += 2) {
+      const node& key = lifecycle->children[index];
+      const node& subjects = lifecycle->children[index + 1];
+      const std::string action_path = child_path(lifecycle_path, key.scalar);
+      const lifecycle_action action =
+          action_value(key.scalar, origin, action_path, key);
+      append_requirements(
+          result,
+          requirement_sequence(subjects,
+                               origin,
+                               action_path,
+                               requirement_scope::lifecycle(action)));
+    }
+  }
+
+  return result;
+}
+
+std::vector<lifecycle_program> lifecycle_value(const node& value,
+                                               const source_origin& origin,
+                                               const std::string& path)
+{
+  require_kind(value, node_kind::mapping, origin, path, path);
+  std::vector<lifecycle_program> result;
+  result.reserve(value.children.size() / 2);
+  for (std::size_t index = 0; index < value.children.size(); index += 2) {
+    const node& key = value.children[index];
+    const node& program_node = value.children[index + 1];
+    const std::string action_path = child_path(path, key.scalar);
+    const lifecycle_action action =
+        action_value(key.scalar, origin, action_path, key);
+    result.emplace_back(action,
+                        program_value(program_node, origin, action_path));
+  }
+  return result;
+}
+
+architecture_requirements architectures_value(const node* value,
+                                              const source_origin& origin)
+{
+  if (value == nullptr) {
     return architecture_requirements({}, {});
-  const std::string path = "architectures";
+  }
+
+  constexpr std::string_view path = "architectures";
   allow_keys(*value, origin, path, {"build", "target"});
   std::vector<architecture_reference> build;
   std::vector<architecture_reference> target;
-  if (const node* entries = find_key(*value, "build"))
+  if (const node* entries = find_key(*value, "build")) {
     build = architecture_sequence(*entries, origin, "architectures.build");
-  if (const node* entries = find_key(*value, "target"))
+  }
+  if (const node* entries = find_key(*value, "target")) {
     target = architecture_sequence(*entries, origin, "architectures.target");
-  return semantic_value(origin, path, *value, [&] {
+  }
+
+  return semantic_value(origin, std::string(path), *value, [&] {
     return architecture_requirements(std::move(build), std::move(target));
   });
 }
@@ -179,15 +238,21 @@ std::vector<source_input> sources_value(const node& value,
   const auto& entries = sequence_value(value, origin, path);
   std::vector<source_input> result;
   result.reserve(entries.size());
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const node& entry = entries[i];
-    const std::string item_path = path + "[" + std::to_string(i) + "]";
+  for (std::size_t index = 0; index < entries.size(); ++index) {
+    const node& entry = entries[index];
+    const std::string item_path = path + "[" + std::to_string(index) + "]";
     allow_keys(entry, origin, item_path, {"url", "path", "name", "sha256"});
+
     const node* url = find_key(entry, "url");
     const node* local = find_key(entry, "path");
-    if ((url != nullptr) == (local != nullptr))
-      fail(yaml_error_code::invalid_value, origin, item_path, entry.mark,
+    if ((url != nullptr) == (local != nullptr)) {
+      fail(yaml_error_code::invalid_value,
+           origin,
+           item_path,
+           entry.mark,
            "source must contain exactly one of url or path");
+    }
+
     const node& name_node = required_key(entry, "name", origin, item_path);
     const node& digest_node = required_key(entry, "sha256", origin, item_path);
     const std::string name_path = child_path(item_path, "name");
@@ -197,19 +262,21 @@ std::vector<source_input> sources_value(const node& value,
     digest content = semantic_value(origin, digest_path, digest_node, [&] {
       return digest(digest_algorithm::sha256, hash);
     });
-    if (url) {
+
+    if (url != nullptr) {
       const std::string locator_path = child_path(item_path, "url");
       const std::string locator = scalar_value(*url, origin, locator_path);
       result.push_back(semantic_value(origin, item_path, entry, [&] {
         return source_input::remote(locator, name, content);
       }));
-    } else {
-      const std::string locator_path = child_path(item_path, "path");
-      const std::string locator = scalar_value(*local, origin, locator_path);
-      result.push_back(semantic_value(origin, item_path, entry, [&] {
-        return source_input::local(locator, name, content);
-      }));
+      continue;
     }
+
+    const std::string locator_path = child_path(item_path, "path");
+    const std::string locator = scalar_value(*local, origin, locator_path);
+    result.push_back(semantic_value(origin, item_path, entry, [&] {
+      return source_input::local(locator, name, content);
+    }));
   }
   return result;
 }
@@ -217,19 +284,27 @@ std::vector<source_input> sources_value(const node& value,
 package_release package_release_value(const node& package,
                                       const source_origin& origin)
 {
-  const std::string path = "package";
-  allow_keys(package, origin, path,
-             {"name", "version", "release", "summary", "description",
-              "homepage", "licenses"});
+  constexpr std::string_view path = "package";
+  allow_keys(package,
+             origin,
+             path,
+             {"name",
+              "version",
+              "release",
+              "summary",
+              "description",
+              "homepage",
+              "licenses"});
   const node& name_node = required_key(package, "name", origin, path);
   const node& version_node = required_key(package, "version", origin, path);
   const node& release_node = required_key(package, "release", origin, path);
   const std::string name = scalar_value(name_node, origin, "package.name");
-  const std::string version = scalar_value(
-      version_node, origin, "package.version");
-  const std::uint32_t release = release_value(
-      release_node, origin, "package.release");
-  return semantic_value(origin, path, package, [&] {
+  const std::string version =
+      scalar_value(version_node, origin, "package.version");
+  const std::uint32_t release =
+      release_value(release_node, origin, "package.release");
+
+  return semantic_value(origin, std::string(path), package, [&] {
     return package_release(package_reference(name), version, release);
   });
 }
@@ -237,26 +312,35 @@ package_release package_release_value(const node& package,
 package_metadata package_metadata_value(const node& package,
                                         const source_origin& origin)
 {
-  const node& summary_node = required_key(package, "summary", origin, "package");
-  const node& licenses_node = required_key(package, "licenses", origin, "package");
-  const std::string summary = scalar_value(
-      summary_node, origin, "package.summary");
+  constexpr std::string_view path = "package";
+  const node& summary_node = required_key(package, "summary", origin, path);
+  const node& licenses_node = required_key(package, "licenses", origin, path);
+  const std::string summary =
+      scalar_value(summary_node, origin, "package.summary");
+
   std::optional<std::string> description;
   std::optional<std::string> homepage;
-  if (const node* value = find_key(package, "description"))
+  if (const node* value = find_key(package, "description")) {
     description = scalar_value(*value, origin, "package.description");
-  if (const node* value = find_key(package, "homepage"))
+  }
+  if (const node* value = find_key(package, "homepage")) {
     homepage = scalar_value(*value, origin, "package.homepage");
-  const auto& license_nodes = sequence_value(
-      licenses_node, origin, "package.licenses");
+  }
+
+  const auto& license_nodes =
+      sequence_value(licenses_node, origin, "package.licenses");
   std::vector<std::string> licenses;
   licenses.reserve(license_nodes.size());
-  for (std::size_t i = 0; i < license_nodes.size(); ++i)
-    licenses.push_back(scalar_value(
-        license_nodes[i], origin,
-        "package.licenses[" + std::to_string(i) + "]"));
-  return semantic_value(origin, "package", package, [&] {
-    return package_metadata(summary, description, homepage, std::move(licenses));
+  for (std::size_t index = 0; index < license_nodes.size(); ++index) {
+    licenses.push_back(
+        scalar_value(license_nodes[index],
+                     origin,
+                     "package.licenses[" + std::to_string(index) + "]"));
+  }
+
+  return semantic_value(origin, std::string(path), package, [&] {
+    return package_metadata(
+        summary, description, homepage, std::move(licenses));
   });
 }
 

@@ -6,9 +6,12 @@
 
 namespace pkgsource::yaml {
 
-yaml_error::yaml_error(yaml_error_code code, std::string document,
-                       std::string path, std::uint32_t line,
-                       std::uint32_t column, std::string message)
+yaml_error::yaml_error(yaml_error_code code,
+                       std::string document,
+                       std::string path,
+                       std::uint32_t line,
+                       std::uint32_t column,
+                       std::string message)
     : std::runtime_error(std::move(message)), code_(code),
       document_(std::move(document)), path_(std::move(path)), line_(line),
       column_(column)

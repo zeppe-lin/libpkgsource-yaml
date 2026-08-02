@@ -6,6 +6,7 @@
 
 namespace pkgsource::yaml::internal {
 
+/// One normalized one-based source location.
 struct source_mark final {
   std::uint32_t line;
   std::uint32_t column;

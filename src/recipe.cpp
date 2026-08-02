@@ -19,9 +19,17 @@ recipe_declaration parse_recipe_yaml(std::string_view bytes,
   using namespace internal;
 
   node root = parse_document(bytes, origin, limits);
-  allow_keys(root, origin, "$",
-             {"format", "package", "requirements", "sources", "build",
-              "check", "lifecycle", "architectures"});
+  allow_keys(root,
+             origin,
+             "$",
+             {"format",
+              "package",
+              "requirements",
+              "sources",
+              "build",
+              "check",
+              "lifecycle",
+              "architectures"});
   require_format(root, origin, "zeppe-lin.recipe/1");
 
   const node& package = required_key(root, "package", origin, "$");
@@ -49,7 +57,8 @@ recipe_declaration parse_recipe_yaml(std::string_view bytes,
       requirements_value(requirements, origin, "requirements"),
       std::move(lifecycle),
       architectures_value(find_key(root, "architectures"), origin),
-      provenance(origin, "document", root), std::move(check));
+      provenance(origin, "document", root),
+      std::move(check));
 }
 
 } // namespace pkgsource::yaml
