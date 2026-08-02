@@ -31,6 +31,8 @@ pkgconf.generate(
   filebase: 'libpkgsource-yaml',
   description: 'Strict native YAML syntax adapter for libpkgsource',
   subdirs: '.',
-  # Requirements are derived from the library target's dependency closure.
-  # Repeating them here would duplicate entries in the generated .pc file.
+  # The library target contributes both dependencies privately. Promote the
+  # public semantic-core dependency with the same dependency object so Meson
+  # de-duplicates it from Requires.private; libyaml remains private.
+  requires: [libpkgsource_dep],
 )

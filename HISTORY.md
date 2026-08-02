@@ -18,6 +18,8 @@ First independent YAML frontend release.
   document, schema-path, line, and column provenance.
 - Added strict grammar, resource-bound, public-header, metadata, and authority-
   boundary contract tests.
+- Exported `libpkgsource` once as a public pkg-config requirement while
+  retaining libyaml once in the private static-link closure.
 - Published the parser design, protocol specifications, migration contract, and
   testing obligations in this repository.
 
