@@ -2,18 +2,6 @@
 
 ## 1.0.0
 
-House engineering cleanup before publication.
-
-- Isolated libyaml event acquisition behind a provider-neutral internal API.
-- Separated document-tree handling, recipe field decoding, and public grammar
-  orchestration.
-- Added explicit public symbol visibility and a reviewed ELF ABI manifest.
-- Reorganized tests by provider, parser subset, grammar, semantic handoff, and
-  repository contract.
-- Standardized code style, Doxygen, canonical Markdown manuals, installed
-  documentation, and versioned HTML generation.
-
-
 First independent YAML frontend release.
 
 - Extracted the YAML implementation, format contracts, manuals, and tests from
@@ -28,12 +16,20 @@ First independent YAML frontend release.
   limits with a stable `resource_limit` failure category.
 - Separated parser errors from `libpkgsource` sealing errors and retained exact
   document, schema-path, line, and column provenance.
-- Added strict grammar, resource-bound, public-header, metadata, and authority-
-  boundary contract tests.
+- Isolated libyaml event acquisition behind a provider-neutral internal API
+  without exposing a one-choice provider option.
+- Separated document-tree handling, recipe field decoding, and public grammar
+  orchestration.
+- Added explicit public symbol visibility and a reviewed ELF ABI manifest.
+- Reorganized tests by provider normalization, strict YAML subset, resource
+  limits, profile grammar, recipe grammar, semantic handoff, and repository
+  contract.
 - Exported `libpkgsource` once as a public pkg-config requirement while
   retaining libyaml once in the private static-link closure.
-- Published the parser design, protocol specifications, migration contract, and
-  testing obligations in this repository.
+- Standardized code style, public Doxygen, canonical Markdown manuals,
+  installed documentation, and versioned HTML generation.
+- Published architecture, protocol, migration, testing, ABI, maintenance, and
+  contribution contracts in this repository.
 
 ## Import boundary
 

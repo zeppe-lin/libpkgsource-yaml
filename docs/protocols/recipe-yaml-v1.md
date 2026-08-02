@@ -42,8 +42,8 @@ The package mapping allows exactly `name`, `version`, `release`, `summary`,
 
 `name`, `version`, `release`, `summary`, and `licenses` are required.
 `description` and `homepage` are optional. `release` is an unsigned canonical
-positive decimal integer: no sign, no leading zeroes except the impossible zero
-value, and no value above `uint32_t`. Other semantic constraints come from the
+positive decimal integer: no sign, no leading zeroes, no zero value, and no
+value above `UINT32_MAX`. Other semantic constraints come from the
 corresponding `libpkgsource` value constructors.
 
 ## Requirements
@@ -140,8 +140,8 @@ owned by `libpkgsource`.
 
 ## YAML subset, provenance, and limits
 
-The strict YAML subset and resource ceilings are identical to
-`PROFILES-YAML.md`: one document; no directives, anchors, aliases, merges,
+The strict YAML subset and resource ceilings are identical to those in
+`profiles-yaml-v1.md`: one document; no directives, anchors, aliases, merges,
 custom tags, duplicate keys, complex keys, or unknown fields; bounded total
 bytes, scalar bytes, nodes, and depth.
 
