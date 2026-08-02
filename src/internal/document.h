@@ -33,7 +33,7 @@ struct node final {
                                   const parse_limits& limits);
 [[nodiscard]] std::string child_path(std::string_view path,
                                      std::string_view key);
-[[nodiscard]] const node& require_kind(const node& value, node_kind expected,
+const node& require_kind(const node& value, node_kind expected,
                                        const source_origin& origin,
                                        std::string_view path,
                                        std::string_view name);

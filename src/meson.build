@@ -14,6 +14,22 @@ else
   error('unsupported YAML provider: ' + yaml_provider)
 endif
 
+
+elf_export_generator = find_program(
+  meson.project_source_root() / 'tools/generate-elf-export-script.sh',
+)
+elf_export_script = configure_file(
+  input: '../abi/libpkgsource-yaml.exports',
+  output: 'libpkgsource-yaml.exports.map',
+  command: [elf_export_generator, '@INPUT@'],
+  capture: true,
+)
+
+library_link_args = [
+  '-Wl,--version-script=' + elf_export_script.full_path(),
+]
+library_link_depends = [elf_export_script]
+
 libpkgsource_yaml = library(
   'pkgsource-yaml',
   files(
@@ -27,6 +43,8 @@ libpkgsource_yaml = library(
   dependencies: [libpkgsource_dep] + yaml_provider_dependencies,
   cpp_args: visibility_cpp_args + ['-DPKGSOURCE_YAML_BUILDING_LIBRARY'],
   gnu_symbol_visibility: 'hidden',
+  link_args: library_link_args,
+  link_depends: library_link_depends,
   install: true,
   version: meson.project_version(),
   soversion: '1',
