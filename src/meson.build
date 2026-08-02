@@ -21,6 +21,7 @@ libpkgsource_yaml = library(
     'profiles.cpp',
     'recipe.cpp',
     'internal/document.cpp',
+    'internal/recipe_fields.cpp',
   ) + yaml_provider_sources,
   include_directories: [public_inc, internal_inc],
   dependencies: [libpkgsource_dep] + yaml_provider_dependencies,
