@@ -22,7 +22,10 @@ if get_option('tests').enabled()
         '../src/internal/yaml_event_reader_libyaml.cpp',
       ]
       test_dependencies = [libpkgsource_dep] + yaml_provider_dependencies
-      test_include_directories = [internal_inc]
+      # This target recompiles parser.cpp outside the library target. Carry the
+      # source-tree public include root explicitly so an older installed
+      # libpkgsource-yaml header cannot satisfy its angle-bracket include.
+      test_include_directories = [public_inc, internal_inc]
     endif
     test_executable = executable(
       test_spec[0] + '-test',
