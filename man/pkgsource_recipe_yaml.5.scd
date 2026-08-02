@@ -2,67 +2,39 @@ pkgsource_recipe_yaml(5)
 
 # NAME
 
-pkgsource_recipe_yaml - native recipe.yml/1 and recipe.yml/2 input syntax
+pkgsource_recipe_yaml - native recipe.yml/1 input protocol
 
 # DESCRIPTION
 
-A native recipe YAML document declares one package release.  The root mapping
-uses either *format: zeppe-lin.recipe/1* or
-*format: zeppe-lin.recipe/2* and contains package metadata, typed requirements,
-source declarations, a build program, optional lifecycle programs, and optional
-build and target architecture constraints.
+A *zeppe-lin.recipe/1* document declares one package release.  Its root contains
+required *format*, *package*, *requirements*, *sources*, and *build* values, plus
+optional *check*, *lifecycle*, and *architectures* values.
 
-Requirement subjects are explicit mappings:
+This first published protocol includes the optional check program.  There is no
+published recipe/2 compatibility generation.
 
-```
-requirements:
-  build:
-    - profile: "@toolchain"
-    - package: pkg-config
-  run:
-    - package: libfoo
-```
-
-Build, run, check, and action-bound lifecycle scopes remain distinct.  There is
-no combined build-and-run scope and no scalar subject shorthand.
-
-Each source has exactly one *url* or *path*, plus an explicit local *name* and a
-lowercase SHA-256 digest.  Programs use exact *language: posix-shell* and
-*script* fields.  The parser does not fetch inputs or execute programs.
-
-# VERSION ONE
-
-*recipe.yml/1* is the published original native protocol.  It does not accept a
-root check program.  Check-scoped requirements remain valid reserved metadata
-and do not by themselves provide executable check authority.
-
-# VERSION TWO
-
-*recipe.yml/2* adds one optional root *check* program with the same shape as the
-build and lifecycle programs:
-
-```
-check:
-  language: posix-shell
-  script: |
-    meson test -C build
-```
-
-Version-two check requirements require this program.  A check program with no
-additional check requirements is valid.  Program bytes are retained exactly and
-contribute to semantic identity, but execution policy and result evidence remain
-outside *libpkgsource*.
+Requirements use explicit *package* or *profile* subject mappings and retain
+separate build, run, check, and action-bound lifecycle scopes.  Sources contain
+exactly one *url* or *path*, plus explicit *name* and lowercase SHA-256 fields.
+Programs contain exact *language: posix-shell* and *script* fields.
 
 # AUTHORITY
 
-The parser produces a *recipe_declaration*.  It becomes authority only after
-*seal_source()* validates it with an already sealed profile catalog and returns
-a *source_snapshot*.
+The parser returns one *recipe_declaration*.  It does not seal profiles or source
+authority, open files, fetch inputs, execute programs, resolve requirements, or
+construct plans.
 
-Document spelling, mapping order, syntax version, and declaration positions do
-not independently become semantic identity.  Exact package semantics, profile
-identities, source identities, programs, and architecture constraints do.
+The caller passes the declaration and one explicit sealed profile catalog to
+*seal_source()*.  That core operation owns profile expansion, normalization,
+duplicate detection, lifecycle and check-program binding, and source identity.
+
+# YAML CONTRACT
+
+Exactly one strict YAML document is accepted.  Directives, anchors, aliases,
+merge keys, custom or incompatible tags, duplicate keys, complex mapping keys,
+unknown schema keys, scalar requirement shorthand, and type drift are rejected.
+Parser resource limits apply.
 
 # SEE ALSO
 
-*pkgsource_yaml*(3), *pkgsource_recipe*(3), *pkgsource_profiles_yaml*(5)
+*pkgsource_yaml*(3), *pkgsource_profiles_yaml*(5)

@@ -2,71 +2,69 @@ pkgsource_yaml(3)
 
 # NAME
 
-pkgsource_yaml - strict native profiles.yml/1 and recipe YAML frontend
+pkgsource_yaml - strict native YAML declaration parser
 
 # SYNOPSIS
 
 *#include <libpkgsource-yaml/libpkgsource-yaml.h>*
 
-*pkgsource::yaml_adapter::parsed_profile_document*
-*parse_profiles_yaml_v1(std::string_view bytes,*
-*    pkgsource::source_origin origin);*
+*std::vector<pkgsource::profile_declaration>*
+*pkgsource::yaml::parse_profiles_yaml(std::string_view bytes,*
+*    pkgsource::source_origin origin,*
+*    const pkgsource::yaml::parse_limits& limits = {});*
 
-*pkgsource::yaml_adapter::parsed_recipe_document*
-*parse_recipe_yaml_v1(std::string_view bytes,*
-*    pkgsource::source_origin origin);*
-
-*pkgsource::yaml_adapter::parsed_recipe_document*
-*parse_recipe_yaml_v2(std::string_view bytes,*
-*    pkgsource::source_origin origin);*
+*pkgsource::recipe_declaration*
+*pkgsource::yaml::parse_recipe_yaml(std::string_view bytes,*
+*    pkgsource::source_origin origin,*
+*    const pkgsource::yaml::parse_limits& limits = {});*
 
 # DESCRIPTION
 
-*libpkgsource-yaml* parses one strict native YAML document from caller-owned
-bytes.  It produces parser-neutral *profile_declaration* or
-*recipe_declaration* values.  Parsed documents are not authority.
+*libpkgsource-yaml* parses one caller-owned in-memory YAML document into
+parser-neutral *libpkgsource* declarations.  It never opens paths or invokes
+*profile_catalog::seal()* or *seal_source()*.
 
-*seal_profiles_yaml_v1()* invokes *profile_catalog::seal()*.
-*seal_recipe_yaml_v1()* and *seal_recipe_yaml_v2()* invoke *seal_source()* with
-an already sealed profile catalog.  Only those sealed native values cross the
-semantic authority boundary.
-
-Version one preserves the published no-check-program protocol.  Version two
-adds one optional exact check program using the same *language* and *script*
-shape as other programs.  Version-two check requirements without that program
-are semantic errors from *seal_source()*.
-
-The adapter does not open paths, discover collections, combine profile
-documents, choose precedence, resolve requirements, fetch sources, or execute
-programs.
+The profile parser accepts *zeppe-lin.profiles/1*.  The recipe parser accepts
+*zeppe-lin.recipe/1*, including its optional check program.  Protocol versions
+are document fields, not C++ entry-point generations.
 
 # STRICTNESS
 
-The adapter rejects multiple documents, YAML directives, duplicate or unknown
-mapping keys, non-scalar mapping keys, anchors, aliases, merge keys, custom or
+The parser rejects multiple or empty documents, directives, duplicate and
+unknown keys, non-scalar mapping keys, anchors, aliases, merge keys, custom or
 kind-incompatible tags, scalar requirement shorthand, and schema/type drift.
 
-Standard string, integer, sequence, and mapping tags are accepted only where
-their node kind matches the schema.  YAML scalar typing does not infer package
-semantics.
+# LIMITS
+
+*parse_limits* bounds total document bytes, bytes in one scalar, total parsed
+nodes, and nesting depth.  The root is depth one.  Exceeding any ceiling throws
+*yaml_error* with code *resource_limit*.
 
 # ERRORS
 
-Syntax and schema failures throw *yaml_error*.  Branch on *yaml_error_code*.
-The error retains the source document, schema path, and one-based line and
-column.
+Syntax, YAML-feature, schema, and resource failures throw *yaml_error*.  The
+value retains a stable *yaml_error_code*, caller-supplied document name, schema
+path, and one-based line and column.
 
-Values rejected while constructing parser-neutral declarations are reported as
-*yaml_error* with code *invalid_value* at the exact input location.  Failures
-from *profile_catalog::seal()* or *seal_source()* remain *pkgsource::error*
-values; the adapter does not translate sealer error codes.
+A failure raised while constructing one core semantic value is translated to
+*invalid_value* at its YAML location.  Later failures from profile or source
+sealing remain *pkgsource::error* and are not translated by this library.
+
+# AUTHORITY
+
+Parsed declarations are not package-source authority.  Callers explicitly pass
+profile declarations to *profile_catalog::seal()* and recipe declarations to
+*seal_source()*.  Aggregation, precedence, semantic normalization, identity,
+resolution, fetching, execution, planning, and storage remain outside this
+library.
 
 # ABI
 
-*libpkgsource-yaml.so.2* is an optional library.  Its public headers do not
-expose libyaml types.  The core *libpkgsource.so.2* has no libyaml dependency.
+The first public ABI is *libpkgsource-yaml.so.1*.  Public headers expose no
+libyaml types.  The library requires *libpkgsource* major API 3 and uses libyaml
+as a private implementation dependency.
 
 # SEE ALSO
 
-*libpkgsource*(3), *pkgsource_profile*(3), *pkgsource_recipe*(3),
-*pkgsource_profiles_yaml*(5), *pkgsource_recipe_yaml*(5)
+*libpkgsource*(3), *pkgsource_profiles_yaml*(5),
+*pkgsource_recipe_yaml*(5)
