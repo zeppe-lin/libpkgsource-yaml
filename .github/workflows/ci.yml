@@ -11,8 +11,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [gcc, clang]
+        compiler: [g++, clang++]
         mode: [shared, static]
+    env:
+      CXX: ${{ matrix.compiler }}
     steps:
       - uses: actions/checkout@v4
       - name: Check out libpkgsource 3.0.0
@@ -21,38 +23,34 @@ jobs:
           repository: zeppe-lin/libpkgsource
           ref: v3.0.0
           path: dependencies/libpkgsource
-      - name: Install build dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             g++ clang meson ninja-build pkg-config libssl-dev libyaml-dev \
             scdoc mandoc
-      - name: Select compiler
-        run: |
-          if [ '${{ matrix.compiler }}' = clang ]; then
-            echo 'CC=clang' >> "$GITHUB_ENV"
-            echo 'CXX=clang++' >> "$GITHUB_ENV"
-          else
-            echo 'CC=gcc' >> "$GITHUB_ENV"
-            echo 'CXX=g++' >> "$GITHUB_ENV"
-          fi
-      - name: Build and install exact source authority
+      - name: Build and install minimum source authority
         run: |
           prefix="$RUNNER_TEMP/prefix"
           meson setup dependencies/libpkgsource/build \
             dependencies/libpkgsource \
             --prefix="$prefix" \
+            --libdir=lib \
             -Ddefault_library=${{ matrix.mode }} \
             -Dlink_mode=${{ matrix.mode }} \
             -Dtests=disabled \
-            -Dman_pages=disabled
+            -Dman_pages=disabled \
+            -Dwerror=true
           meson compile -C dependencies/libpkgsource/build
           meson install -C dependencies/libpkgsource/build
+          echo "PREFIX=$prefix" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=$prefix/lib" >> "$GITHUB_ENV"
       - name: Configure
         run: |
           meson setup build \
+            --prefix="$PREFIX" \
+            --libdir=lib \
             -Ddefault_library=${{ matrix.mode }} \
             -Dlink_mode=${{ matrix.mode }} \
             -Dman_pages=enabled \
@@ -62,14 +60,40 @@ jobs:
       - name: Test
         run: meson test -C build --print-errorlogs
       - name: Lint manuals
+        run: find build/man -type f \( -name '*.3' -o -name '*.5' \) -exec mandoc -Tlint {} +
+      - name: Install
+        run: meson install -C build
+      - name: Qualify installed consumer
+        shell: bash
         run: |
-          find build -type f \( -name 'pkgsource_yaml.3' \
-            -o -name 'pkgsource_profiles_yaml.5' \
-            -o -name 'pkgsource_recipe_yaml.5' \) \
-            -exec mandoc -Tlint {} +
+          set -euo pipefail
+          flags=()
+          if [[ '${{ matrix.mode }}' == static ]]; then
+            flags+=(--static)
+          fi
+          "$CXX" -std=c++17 -Wall -Wextra -Wpedantic -Werror \
+            tests/yaml_adapter_header_test.cpp \
+            $(pkg-config "${flags[@]}" --cflags --libs libpkgsource-yaml) \
+            -o yaml-consumer
+          ./yaml-consumer
+      - name: Audit shared dependency boundary
+        if: matrix.mode == 'shared'
+        shell: bash
+        run: |
+          set -euo pipefail
+          library=$(find build -type f -name 'libpkgsource-yaml.so.*' ! -type l -print -quit)
+          readelf -d "$library" | tee yaml.dynamic
+          grep -F 'Library soname: [libpkgsource-yaml.so.1]' yaml.dynamic
+          grep -F 'Shared library: [libpkgsource.so.3]' yaml.dynamic
+          grep -E 'Shared library: \[libyaml[^]]*\.so' yaml.dynamic
+          ! grep -E 'libpkgsource-codec|libpkgsource-plan|libpkgplan' yaml.dynamic
 
   sanitizers:
     runs-on: ubuntu-latest
+    env:
+      CXX: g++
+      ASAN_OPTIONS: halt_on_error=1:abort_on_error=1:detect_leaks=1:print_summary=1
+      UBSAN_OPTIONS: halt_on_error=1:abort_on_error=1:print_summary=1:print_stacktrace=1
     steps:
       - uses: actions/checkout@v4
       - name: Check out libpkgsource 3.0.0
@@ -78,31 +102,36 @@ jobs:
           repository: zeppe-lin/libpkgsource
           ref: v3.0.0
           path: dependencies/libpkgsource
-      - name: Install build dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             g++ meson ninja-build pkg-config libssl-dev libyaml-dev
-      - name: Build and install source authority
+      - name: Build sanitized source authority
         run: |
           prefix="$RUNNER_TEMP/prefix"
           meson setup dependencies/libpkgsource/build \
             dependencies/libpkgsource \
             --prefix="$prefix" \
+            --libdir=lib \
+            -Ddefault_library=static \
+            -Dlink_mode=static \
             -Dtests=disabled \
-            -Dman_pages=disabled
+            -Dman_pages=disabled \
+            -Db_sanitize=address,undefined \
+            -Dwerror=true
           meson compile -C dependencies/libpkgsource/build
           meson install -C dependencies/libpkgsource/build
           echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$prefix/lib" >> "$GITHUB_ENV"
-      - name: Configure and test with ASan and UBSan
+      - name: Configure
         run: |
           meson setup build \
-            -Db_sanitize=address,undefined \
-            -Db_lundef=false \
+            -Ddefault_library=static \
+            -Dlink_mode=static \
             -Dman_pages=disabled \
+            -Db_sanitize=address,undefined \
             -Dwerror=true
-          meson compile -C build
-          ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
-          UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
-            meson test -C build --print-errorlogs
+      - name: Compile
+        run: meson compile -C build
+      - name: Test
+        run: meson test -C build --print-errorlogs
