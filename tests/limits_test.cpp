@@ -80,6 +80,34 @@ void test_exact_document_boundary()
   assert(declarations.size() == 1);
 }
 
+
+void test_exact_scalar_boundary()
+{
+  parse_limits limits;
+  limits.maximum_scalar_bytes = std::string("zeppe-lin.profiles/1").size();
+  const auto declarations = parse_profiles_yaml(
+      document, source_origin("profiles.yml"), limits);
+  assert(declarations.size() == 1);
+}
+
+void test_exact_node_boundary()
+{
+  parse_limits limits;
+  limits.maximum_nodes = 12;
+  const auto declarations = parse_profiles_yaml(
+      document, source_origin("profiles.yml"), limits);
+  assert(declarations.size() == 1);
+}
+
+void test_exact_depth_boundary()
+{
+  parse_limits limits;
+  limits.maximum_depth = 6;
+  const auto declarations = parse_profiles_yaml(
+      document, source_origin("profiles.yml"), limits);
+  assert(declarations.size() == 1);
+}
+
 } // namespace
 
 int main()
@@ -89,4 +117,7 @@ int main()
   test_node_limit();
   test_depth_limit();
   test_exact_document_boundary();
+  test_exact_scalar_boundary();
+  test_exact_node_boundary();
+  test_exact_depth_boundary();
 }

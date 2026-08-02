@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <functional>
+#include <string>
 #include <string_view>
 
 using namespace pkgsource;
@@ -149,6 +150,11 @@ void test_strict_yaml_rejections()
 
   expect_yaml(yaml_error_code::invalid_document, [] {
     (void)parse_profiles_yaml("", source_origin("profiles.yml"));
+  }, "$");
+
+  expect_yaml(yaml_error_code::syntax, [] {
+    const std::string invalid_utf8("\xff", 1);
+    (void)parse_profiles_yaml(invalid_utf8, source_origin("profiles.yml"));
   }, "$");
 }
 
