@@ -22,7 +22,7 @@ trap 'rm -f "$input" "$expected" "$actual"' EXIT HUP INT TERM
 cat > "$input" <<'EOF'
 .SH SYNOPSIS
 .EX
-#include \f[B]<libpkgsource\-plan/libpkgsource\-plan.h>\f[R]
+#include \f[B]<libpkgsource\-yaml/libpkgsource\-yaml.h>\f[R]
 .EE
 .IP \(bu 2
 newer Pandoc bullet spelling
@@ -33,7 +33,7 @@ EOF
 cat > "$expected" <<'EOF'
 .SH SYNOPSIS
 .EX
-#include <libpkgsource\-plan/libpkgsource\-plan.h>
+#include <libpkgsource\-yaml/libpkgsource\-yaml.h>
 .EE
 .IP \[bu] 2
 newer Pandoc bullet spelling

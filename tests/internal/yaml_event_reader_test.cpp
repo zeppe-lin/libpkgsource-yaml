@@ -1,10 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Alexandr Savca
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "internal/yaml_event_reader.h"
+#include <libpkgsource-yaml/parser.h>
 
 #include "../support/test_support.h"
-
-#include <libpkgsource-yaml/parser.h>
+#include "internal/yaml_event_reader.h"
 
 #include <array>
 #include <cstddef>
@@ -48,9 +47,10 @@ void retains_scalar_bytes_and_tags()
   const auto key = reader.next();
   const auto value = reader.next();
 
-  require_equal(key.value, std::string("key"),
-                "mapping key bytes must be retained");
-  require_equal(value.value, std::string("value"),
+  require_equal(
+      key.value, std::string("key"), "mapping key bytes must be retained");
+  require_equal(value.value,
+                std::string("value"),
                 "mapping value bytes must be retained");
   require(key.anchor.empty(), "plain scalar must have no anchor");
 }
@@ -58,7 +58,9 @@ void retains_scalar_bytes_and_tags()
 void enforces_scalar_limit_before_tree_construction()
 {
   test_support::expect_yaml_error(
-      pkgsource::yaml::yaml_error_code::resource_limit, "document.yml", "$",
+      pkgsource::yaml::yaml_error_code::resource_limit,
+      "document.yml",
+      "$",
       [] {
         yaml_event_reader reader("value: oversized\n", "document.yml", 4);
         while (reader.next().kind != yaml_event_kind::stream_end) {

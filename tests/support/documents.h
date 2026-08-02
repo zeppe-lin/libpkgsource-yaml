@@ -28,7 +28,8 @@ inline constexpr std::string_view reordered_profiles = R"(profiles:
 format: zeppe-lin.profiles/1
 )";
 
-inline constexpr std::string_view complete_recipe = R"(format: zeppe-lin.recipe/1
+inline constexpr std::string_view complete_recipe =
+    R"(format: zeppe-lin.recipe/1
 package:
   name: example
   version: 1.2.3

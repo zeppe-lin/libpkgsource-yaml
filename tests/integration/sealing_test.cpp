@@ -13,10 +13,8 @@ namespace {
 
 pkgsource::profile_catalog profiles()
 {
-  return pkgsource::profile_catalog::seal(
-      pkgsource::yaml::parse_profiles_yaml(
-          test_documents::profiles,
-          pkgsource::source_origin("profiles.yml")));
+  return pkgsource::profile_catalog::seal(pkgsource::yaml::parse_profiles_yaml(
+      test_documents::profiles, pkgsource::source_origin("profiles.yml")));
 }
 
 pkgsource::source_snapshot parse_and_seal(std::string_view document)

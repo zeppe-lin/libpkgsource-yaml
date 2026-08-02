@@ -2,8 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <libpkgsource-yaml/libpkgsource-yaml.h>
 
+#include <cstddef>
+
 int main()
 {
-  pkgsource::yaml::parse_limits limits;
-  return limits.maximum_depth == 0 ? 1 : 0;
+  const auto declarations = pkgsource::yaml::parse_profiles_yaml(
+      "format: zeppe-lin.profiles/1\nprofiles: {}\n",
+      pkgsource::source_origin("profiles.yml"));
+  return declarations.size() == std::size_t{0} ? 0 : 1;
 }

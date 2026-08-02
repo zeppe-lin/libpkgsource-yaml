@@ -15,14 +15,13 @@ using test_support::expect_yaml_error;
 
 void rejects_duplicate_mapping_keys()
 {
-  expect_yaml_error(yaml_error_code::duplicate_key, "profiles.yml", "format",
-                    [] {
-                      (void)parse_profiles_yaml(
-                          "format: zeppe-lin.profiles/1\n"
-                          "format: zeppe-lin.profiles/1\n"
-                          "profiles: {}\n",
-                          source_origin("profiles.yml"));
-                    });
+  expect_yaml_error(
+      yaml_error_code::duplicate_key, "profiles.yml", "format", [] {
+        (void)parse_profiles_yaml("format: zeppe-lin.profiles/1\n"
+                                  "format: zeppe-lin.profiles/1\n"
+                                  "profiles: {}\n",
+                                  source_origin("profiles.yml"));
+      });
 }
 
 void rejects_unknown_schema_keys()
@@ -34,33 +33,45 @@ void rejects_unknown_schema_keys()
   });
 }
 
-void rejects_anchors_aliases_directives_merges_and_custom_tags()
+void rejects_anchors()
 {
-  expect_yaml_error(yaml_error_code::unsupported_feature, "profiles.yml", "",
-                    [] {
-                      (void)parse_profiles_yaml(
-                          "format: zeppe-lin.profiles/1\n"
-                          "profiles:\n"
-                          "  compiler: &compiler\n"
-                          "    members:\n"
-                          "      - package: gcc\n",
-                          source_origin("profiles.yml"));
-                    });
-  expect_yaml_error(yaml_error_code::unsupported_feature, "profiles.yml", "",
-                    [] {
-                      (void)parse_profiles_yaml(
-                          "format: zeppe-lin.profiles/1\n"
-                          "profiles: *compiler\n",
-                          source_origin("profiles.yml"));
-                    });
-  expect_yaml_error(yaml_error_code::unsupported_feature, "profiles.yml", "",
-                    [] {
-                      (void)parse_profiles_yaml(
-                          "%YAML 1.2\n---\n"
-                          "format: zeppe-lin.profiles/1\nprofiles: {}\n",
-                          source_origin("profiles.yml"));
-                    });
-  expect_yaml_error(yaml_error_code::unsupported_feature, "profiles.yml", "",
+  expect_yaml_error(
+      yaml_error_code::unsupported_feature, "profiles.yml", "$", [] {
+        (void)parse_profiles_yaml("format: zeppe-lin.profiles/1\n"
+                                  "profiles:\n"
+                                  "  compiler: &compiler\n"
+                                  "    members:\n"
+                                  "      - package: gcc\n",
+                                  source_origin("profiles.yml"));
+      });
+}
+
+void rejects_aliases()
+{
+  expect_yaml_error(
+      yaml_error_code::unsupported_feature, "profiles.yml", "$", [] {
+        (void)parse_profiles_yaml("format: zeppe-lin.profiles/1\n"
+                                  "profiles: *compiler\n",
+                                  source_origin("profiles.yml"));
+      });
+}
+
+void rejects_directives()
+{
+  expect_yaml_error(
+      yaml_error_code::unsupported_feature, "profiles.yml", "$", [] {
+        (void)parse_profiles_yaml(
+            "%YAML 1.2\n---\n"
+            "format: zeppe-lin.profiles/1\nprofiles: {}\n",
+            source_origin("profiles.yml"));
+      });
+}
+
+void rejects_merge_keys()
+{
+  expect_yaml_error(yaml_error_code::unsupported_feature,
+                    "profiles.yml",
+                    "profiles.compiler",
                     [] {
                       (void)parse_profiles_yaml(
                           "format: zeppe-lin.profiles/1\n"
@@ -69,28 +80,39 @@ void rejects_anchors_aliases_directives_merges_and_custom_tags()
                           "    <<: {members: [{package: gcc}]}\n",
                           source_origin("profiles.yml"));
                     });
-  expect_yaml_error(yaml_error_code::unsupported_feature, "profiles.yml", "",
-                    [] {
-                      (void)parse_profiles_yaml(
-                          "format: zeppe-lin.profiles/1\n"
-                          "profiles: !zeppe/profiles {}\n",
-                          source_origin("profiles.yml"));
-                    });
 }
 
-void requires_one_nonempty_document_with_scalar_mapping_keys()
+void rejects_custom_tags()
 {
-  expect_yaml_error(yaml_error_code::invalid_document, "profiles.yml", "", [] {
+  expect_yaml_error(
+      yaml_error_code::unsupported_feature, "profiles.yml", "$", [] {
+        (void)parse_profiles_yaml("format: zeppe-lin.profiles/1\n"
+                                  "profiles: !zeppe/profiles {}\n",
+                                  source_origin("profiles.yml"));
+      });
+}
+
+void rejects_multiple_documents()
+{
+  expect_yaml_error(yaml_error_code::invalid_document, "profiles.yml", "$", [] {
     (void)parse_profiles_yaml(
         "---\nformat: zeppe-lin.profiles/1\nprofiles: {}\n"
         "---\nformat: zeppe-lin.profiles/1\nprofiles: {}\n",
         source_origin("profiles.yml"));
   });
+}
+
+void rejects_complex_mapping_keys()
+{
   expect_yaml_error(yaml_error_code::invalid_type, "profiles.yml", "$", [] {
     (void)parse_profiles_yaml(
         "? [format]\n: zeppe-lin.profiles/1\nprofiles: {}\n",
         source_origin("profiles.yml"));
   });
+}
+
+void rejects_empty_documents()
+{
   expect_yaml_error(yaml_error_code::invalid_document, "profiles.yml", "$", [] {
     (void)parse_profiles_yaml("", source_origin("profiles.yml"));
   });
@@ -111,10 +133,14 @@ int main()
   return test_support::run({
       {"rejects duplicate mapping keys", rejects_duplicate_mapping_keys},
       {"rejects unknown schema keys", rejects_unknown_schema_keys},
-      {"rejects unsupported YAML features",
-       rejects_anchors_aliases_directives_merges_and_custom_tags},
-      {"requires one nonempty document with scalar keys",
-       requires_one_nonempty_document_with_scalar_mapping_keys},
+      {"rejects anchors", rejects_anchors},
+      {"rejects aliases", rejects_aliases},
+      {"rejects directives", rejects_directives},
+      {"rejects merge keys", rejects_merge_keys},
+      {"rejects custom tags", rejects_custom_tags},
+      {"rejects multiple documents", rejects_multiple_documents},
+      {"rejects complex mapping keys", rejects_complex_mapping_keys},
+      {"rejects empty documents", rejects_empty_documents},
       {"reports provider syntax failures", reports_provider_syntax_failures},
   });
 }

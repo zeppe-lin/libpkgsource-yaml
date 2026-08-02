@@ -31,7 +31,8 @@ inline void require(bool condition, std::string_view message)
 }
 
 template <typename Left, typename Right>
-void require_equal(const Left& left, const Right& right,
+void require_equal(const Left& left,
+                   const Right& right,
                    std::string_view message)
 {
   require(left == right, message);
@@ -47,12 +48,14 @@ void expect_yaml_error(pkgsource::yaml::yaml_error_code expected_code,
     function();
   } catch (const pkgsource::yaml::yaml_error& error) {
     require(error.code() == expected_code, "unexpected YAML error category");
-    require_equal(error.document(), std::string(expected_document),
+    require_equal(error.document(),
+                  std::string(expected_document),
                   "unexpected YAML error document");
     require(error.line() > 0, "YAML error line must be one-based");
     require(error.column() > 0, "YAML error column must be one-based");
     if (!expected_path.empty()) {
-      require_equal(error.path(), std::string(expected_path),
+      require_equal(error.path(),
+                    std::string(expected_path),
                     "unexpected YAML error path");
     }
     return;
@@ -61,8 +64,7 @@ void expect_yaml_error(pkgsource::yaml::yaml_error_code expected_code,
 }
 
 template <typename Function>
-void expect_core_error(pkgsource::error_code expected_code,
-                       Function&& function)
+void expect_core_error(pkgsource::error_code expected_code, Function&& function)
 {
   try {
     function();
