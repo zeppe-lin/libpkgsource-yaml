@@ -12,7 +12,7 @@ std::vector<profile_declaration> parse_profiles_yaml(
     std::string_view bytes, source_origin origin,
     const parse_limits& limits)
 {
-  using namespace detail;
+  using namespace internal;
   node root = parse_document(bytes, origin, limits);
   allow_keys(root, origin, "$", {"format", "profiles"});
   require_format(root, origin, "zeppe-lin.profiles/1");

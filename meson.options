@@ -19,3 +19,11 @@ option(
   value: 'auto',
   description: 'Build manual pages with scdoc',
 )
+
+option(
+  'yaml_provider',
+  type: 'combo',
+  choices: ['libyaml'],
+  value: 'libyaml',
+  description: 'Qualified YAML event provider',
+)

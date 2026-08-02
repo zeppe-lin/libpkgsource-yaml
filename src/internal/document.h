@@ -2,22 +2,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "source_mark.h"
+
 #include <libpkgsource-yaml/parser.h>
 
 #include <libpkgsource/error.h>
 
-#include <cstdint>
 #include <initializer_list>
 #include <string>
 #include <string_view>
 #include <vector>
 
-namespace pkgsource::yaml::detail {
-
-struct source_mark final {
-  std::uint32_t line;
-  std::uint32_t column;
-};
+namespace pkgsource::yaml::internal {
 
 enum class node_kind { scalar, sequence, mapping };
 
@@ -37,9 +33,10 @@ struct node final {
                                   const parse_limits& limits);
 [[nodiscard]] std::string child_path(std::string_view path,
                                      std::string_view key);
-const node& require_kind(const node& value, node_kind expected,
-                         const source_origin& origin,
-                         std::string_view path, std::string_view name);
+[[nodiscard]] const node& require_kind(const node& value, node_kind expected,
+                                       const source_origin& origin,
+                                       std::string_view path,
+                                       std::string_view name);
 [[nodiscard]] const node* find_key(const node& mapping, std::string_view key);
 [[nodiscard]] const node& required_key(const node& mapping,
                                        std::string_view key,
@@ -75,4 +72,4 @@ auto semantic_value(const source_origin& origin, const std::string& path,
   }
 }
 
-} // namespace pkgsource::yaml::detail
+} // namespace pkgsource::yaml::internal

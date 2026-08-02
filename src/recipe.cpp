@@ -14,7 +14,7 @@
 namespace pkgsource::yaml {
 namespace {
 
-using namespace detail;
+using namespace internal;
 
 std::uint32_t release_value(const node& value, const source_origin& origin,
                             const std::string& path)

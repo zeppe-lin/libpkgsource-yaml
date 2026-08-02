@@ -1,12 +1,29 @@
 # SPDX-FileCopyrightText: 2026 Alexandr Savca
 # SPDX-License-Identifier: GPL-3.0-or-later
 public_inc = include_directories('../include')
+internal_inc = include_directories('.')
+
+yaml_provider = get_option('yaml_provider')
+yaml_provider_sources = []
+yaml_provider_dependencies = []
+
+if yaml_provider == 'libyaml'
+  yaml_provider_sources += files('internal/yaml_event_reader_libyaml.cpp')
+  yaml_provider_dependencies += [libyaml_dep]
+else
+  error('unsupported YAML provider: ' + yaml_provider)
+endif
 
 libpkgsource_yaml = library(
   'pkgsource-yaml',
-  ['internal/document.cpp', 'profiles.cpp', 'recipe.cpp'],
-  include_directories: public_inc,
-  dependencies: [libpkgsource_dep, libyaml_dep],
+  files(
+    'parser.cpp',
+    'profiles.cpp',
+    'recipe.cpp',
+    'internal/document.cpp',
+  ) + yaml_provider_sources,
+  include_directories: [public_inc, internal_inc],
+  dependencies: [libpkgsource_dep] + yaml_provider_dependencies,
   install: true,
   version: meson.project_version(),
   soversion: '1',
@@ -15,7 +32,7 @@ libpkgsource_yaml = library(
 libpkgsource_yaml_dep = declare_dependency(
   link_with: libpkgsource_yaml,
   include_directories: public_inc,
-  dependencies: [libpkgsource_dep, libyaml_dep],
+  dependencies: [libpkgsource_dep],
 )
 meson.override_dependency('libpkgsource-yaml', libpkgsource_yaml_dep)
 
@@ -31,8 +48,8 @@ pkgconf.generate(
   filebase: 'libpkgsource-yaml',
   description: 'Strict native YAML syntax adapter for libpkgsource',
   subdirs: '.',
-  # The library target contributes both dependencies privately. Promote the
-  # public semantic-core dependency with the same dependency object so Meson
-  # de-duplicates it from Requires.private; libyaml remains private.
+  # The target contributes its full closure as private requirements. Promote
+  # the public semantic owner with its dependency object so Meson de-duplicates
+  # it from that closure. The selected YAML provider remains private.
   requires: [libpkgsource_dep],
 )
