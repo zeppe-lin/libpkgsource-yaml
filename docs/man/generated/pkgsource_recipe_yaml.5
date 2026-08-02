@@ -1,0 +1,27 @@
+.\" Generated from docs/man/pkgsource_recipe_yaml.5.md; do not edit.
+.\"
+.TH "PKGSOURCE_RECIPE_YAML" "5" "" "libpkgsource\-yaml 1.0.0" "libpkgsource\-yaml"
+.SH NAME
+pkgsource_recipe_yaml \- describe the native recipe YAML version 1 protocol
+.SH DESCRIPTION
+A \f[CR]zeppe\-lin.recipe/1\f[R] document declares one package release.
+Its root contains required \f[CR]format\f[R], \f[CR]package\f[R], \f[CR]requirements\f[R], \f[CR]sources\f[R], and \f[CR]build\f[R] values, plus optional \f[CR]check\f[R], \f[CR]lifecycle\f[R], and \f[CR]architectures\f[R] values.
+.PP
+This first published protocol includes the optional check program.
+There is no published recipe/2 compatibility generation.
+.PP
+Requirements use explicit \f[CR]package\f[R] or \f[CR]profile\f[R] subject mappings and retain separate build, run, check, and action\-bound lifecycle scopes.
+Sources contain exactly one \f[CR]url\f[R] or \f[CR]path\f[R], plus explicit \f[CR]name\f[R] and lowercase SHA\-256 fields.
+Programs contain exact \f[CR]language: posix\-shell\f[R] and \f[CR]script\f[R] fields.
+.SH AUTHORITY
+The parser returns one \f[CR]recipe_declaration\f[R].
+It does not seal profiles or source authority, open files, fetch inputs, execute programs, resolve requirements, or construct plans.
+.PP
+The caller passes the declaration and one explicit sealed profile catalog to \f[CR]seal_source()\f[R].
+That core operation owns profile expansion, normalization, duplicate detection, lifecycle and check\-program binding, and source identity.
+.SH YAML CONTRACT
+Exactly one strict YAML document is accepted.
+Directives, anchors, aliases, merge keys, custom or incompatible tags, duplicate keys, complex mapping keys, unknown schema keys, scalar requirement shorthand, and type drift are rejected.
+Parser resource limits apply.
+.SH SEE ALSO
+\f[CR]pkgsource_yaml(3)\f[R], \f[CR]pkgsource_profiles_yaml(5)\f[R]

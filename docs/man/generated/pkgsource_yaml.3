@@ -1,0 +1,55 @@
+.\" Generated from docs/man/pkgsource_yaml.3.md; do not edit.
+.\"
+.TH "PKGSOURCE_YAML" "3" "" "libpkgsource\-yaml 1.0.0" "libpkgsource\-yaml"
+.SH NAME
+pkgsource_yaml \- parse strict native YAML into libpkgsource declarations
+.SH SYNOPSIS
+.IP
+.EX
+#include <libpkgsource\-yaml/libpkgsource\-yaml.h>
+
+std::vector<pkgsource::profile_declaration>
+pkgsource::yaml::parse_profiles_yaml(
+    std::string_view bytes,
+    pkgsource::source_origin origin,
+    const pkgsource::yaml::parse_limits& limits = {});
+
+pkgsource::recipe_declaration
+pkgsource::yaml::parse_recipe_yaml(
+    std::string_view bytes,
+    pkgsource::source_origin origin,
+    const pkgsource::yaml::parse_limits& limits = {});
+.EE
+.SH DESCRIPTION
+\f[CR]libpkgsource\-yaml\f[R] parses one caller\-owned in\-memory YAML document into parser\-neutral \f[CR]libpkgsource\f[R] declarations.
+It never opens paths or invokes \f[CR]profile_catalog::seal()\f[R] or \f[CR]seal_source()\f[R].
+.PP
+The profile parser accepts \f[CR]zeppe\-lin.profiles/1\f[R].
+The recipe parser accepts \f[CR]zeppe\-lin.recipe/1\f[R], including its optional check program.
+Protocol versions are document fields, not C++ entry\-point generations.
+.SH STRICTNESS
+The parser rejects multiple or empty documents, directives, duplicate and unknown keys, non\-scalar mapping keys, anchors, aliases, merge keys, custom or kind\-incompatible tags, scalar requirement shorthand, and protocol/type drift.
+.SH LIMITS
+\f[CR]parse_limits\f[R] bounds total document bytes, bytes in one scalar, retained nodes, and nesting depth.
+The root is depth one.
+All ceilings are inclusive.
+Exceeding one throws \f[CR]yaml_error\f[R] with code \f[CR]resource_limit\f[R].
+.SH ERRORS
+Syntax, unsupported\-feature, schema, value, and resource failures throw \f[CR]yaml_error\f[R].
+The value retains a stable \f[CR]yaml_error_code\f[R], caller\-supplied document label, protocol path, and one\-based line and column.
+.PP
+A failure raised while constructing one core semantic value is translated to \f[CR]invalid_value\f[R] at its YAML location.
+Later failures from profile or source sealing remain \f[CR]pkgsource::error\f[R] and are not translated.
+.SH PROVIDER
+Only the selected private event provider knows libyaml types.
+Grammar behavior, diagnostics, and public ABI remain provider\-neutral.
+.SH AUTHORITY
+Parsed declarations are not package\-source authority.
+Callers explicitly pass profile declarations to \f[CR]profile_catalog::seal()\f[R] and recipe declarations to \f[CR]seal_source()\f[R].
+Aggregation, precedence, semantic normalization, identity, resolution, fetching, execution, planning, and storage remain outside this library.
+.SH ABI
+The first public ABI is \f[CR]libpkgsource\-yaml.so.1\f[R].
+Public headers expose no libyaml types.
+The library requires \f[CR]libpkgsource\f[R] major API 3 and keeps the selected YAML provider private in pkg\-config metadata.
+.SH SEE ALSO
+\f[CR]pkgsource_profiles_yaml(5)\f[R], \f[CR]pkgsource_recipe_yaml(5)\f[R]

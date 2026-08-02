@@ -1,0 +1,31 @@
+.\" Generated from docs/man/pkgsource_profiles_yaml.5.md; do not edit.
+.\"
+.TH "PKGSOURCE_PROFILES_YAML" "5" "" "libpkgsource\-yaml 1.0.0" "libpkgsource\-yaml"
+.SH NAME
+pkgsource_profiles_yaml \- describe the native profiles YAML version 1 protocol
+.SH DESCRIPTION
+A \f[CR]zeppe\-lin.profiles/1\f[R] document contains exactly the required \f[CR]format\f[R] and \f[CR]profiles\f[R] keys.
+\f[CR]profiles\f[R] is a mapping and may be empty.
+.PP
+Each profile key omits the leading \f[CR]\[at]\f[R].
+Its value contains exactly one required, non\-empty \f[CR]members\f[R] sequence.
+Every member is an explicit one\-key mapping:
+.IP
+.EX
+\- package: gcc
+\- profile: \[dq]\[at]compiler\[dq]
+.EE
+.PP
+Scalar shorthand is invalid.
+Package and profile subjects are distinct value domains.
+.SH PARSING AND SEALING
+The parser returns \f[CR]profile_declaration\f[R] values with document, protocol\-path, line, and column provenance.
+It does not require every nested profile to occur in the same document because a caller may aggregate declarations from multiple explicit documents.
+.PP
+Only \f[CR]profile_catalog::seal()\f[R] owns duplicate\-definition and duplicate\-member rejection, unknown\-profile and cycle detection, deterministic expansion, normalization, and profile identities.
+.SH YAML CONTRACT
+Exactly one strict YAML document is accepted.
+Directives, anchors, aliases, merge keys, custom or incompatible tags, duplicate keys, complex mapping keys, unknown schema keys, and type drift are rejected.
+Parser resource limits apply.
+.SH SEE ALSO
+\f[CR]pkgsource_yaml(3)\f[R], \f[CR]pkgsource_recipe_yaml(5)\f[R]
