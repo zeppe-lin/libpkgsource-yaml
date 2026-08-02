@@ -12,7 +12,7 @@
 #include <string_view>
 #include <vector>
 
-namespace pkgsource::yaml_adapter::detail {
+namespace pkgsource::yaml::detail {
 
 struct source_mark final {
   std::uint32_t line;
@@ -33,13 +33,13 @@ struct node final {
                        std::string message);
 
 [[nodiscard]] node parse_document(std::string_view bytes,
-                                  const source_origin& origin);
+                                  const source_origin& origin,
+                                  const parse_limits& limits);
 [[nodiscard]] std::string child_path(std::string_view path,
                                      std::string_view key);
 const node& require_kind(const node& value, node_kind expected,
-                                       const source_origin& origin,
-                                       std::string_view path,
-                                       std::string_view name);
+                         const source_origin& origin,
+                         std::string_view path, std::string_view name);
 [[nodiscard]] const node* find_key(const node& mapping, std::string_view key);
 [[nodiscard]] const node& required_key(const node& mapping,
                                        std::string_view key,
@@ -75,4 +75,4 @@ auto semantic_value(const source_origin& origin, const std::string& path,
   }
 }
 
-} // namespace pkgsource::yaml_adapter::detail
+} // namespace pkgsource::yaml::detail

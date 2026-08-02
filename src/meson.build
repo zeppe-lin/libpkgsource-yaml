@@ -9,7 +9,7 @@ libpkgsource_yaml = library(
   dependencies: [libpkgsource_dep, libyaml_dep],
   install: true,
   version: meson.project_version(),
-  soversion: '0',
+  soversion: '1',
 )
 
 libpkgsource_yaml_dep = declare_dependency(
@@ -31,6 +31,6 @@ pkgconf.generate(
   filebase: 'libpkgsource-yaml',
   description: 'Strict native YAML syntax adapter for libpkgsource',
   subdirs: '.',
-  requires: ['libpkgsource = 2.1.0'],
+  requires: ['libpkgsource >= 3.0.0'],
   requires_private: ['yaml-0.1 >= 0.2.5'],
 )

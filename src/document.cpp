@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-namespace pkgsource::yaml_adapter {
+namespace pkgsource::yaml {
 namespace detail {
 namespace {
 
@@ -21,6 +21,11 @@ struct token final {
   std::string anchor;
   std::string tag;
   bool has_directives = false;
+};
+
+struct parse_state final {
+  const parse_limits& limits;
+  std::size_t nodes = 0;
 };
 
 std::uint32_t position(std::size_t value)
@@ -37,8 +42,9 @@ std::string copy_yaml(const yaml_char_t* value)
 
 class event_reader final {
 public:
-  event_reader(std::string_view bytes, std::string document)
-      : document_(std::move(document))
+  event_reader(std::string_view bytes, std::string document,
+               const parse_limits& limits)
+      : document_(std::move(document)), limits_(limits)
   {
     if (!yaml_parser_initialize(&parser_))
       throw yaml_error(yaml_error_code::syntax, document_, "$", 1, 1,
@@ -90,6 +96,13 @@ public:
         result.anchor = copy_yaml(event.data.alias.anchor);
         break;
       case YAML_SCALAR_EVENT:
+        if (event.data.scalar.length > limits_.maximum_scalar_bytes) {
+          yaml_event_delete(&event);
+          throw yaml_error(
+              yaml_error_code::resource_limit, document_, "$",
+              result.mark.line, result.mark.column,
+              "YAML scalar exceeds configured byte limit");
+        }
         result.value.assign(
             reinterpret_cast<const char*>(event.data.scalar.value),
             event.data.scalar.length);
@@ -115,6 +128,7 @@ private:
   yaml_parser_t parser_{};
   bool initialized_ = false;
   std::string document_;
+  const parse_limits& limits_;
 };
 
 bool permitted_tag(node_kind kind, std::string_view tag)
@@ -133,9 +147,25 @@ bool permitted_tag(node_kind kind, std::string_view tag)
   return false;
 }
 
-node parse_node(event_reader& reader, token first,
-                const source_origin& origin, const std::string& path)
+void account_node(parse_state& state, const source_origin& origin,
+                  const std::string& path, source_mark mark,
+                  std::size_t depth)
 {
+  if (depth > state.limits.maximum_depth)
+    fail(yaml_error_code::resource_limit, origin, path, mark,
+         "YAML nesting exceeds configured depth limit");
+  if (state.nodes >= state.limits.maximum_nodes)
+    fail(yaml_error_code::resource_limit, origin, path, mark,
+         "YAML node count exceeds configured limit");
+  ++state.nodes;
+}
+
+node parse_node(event_reader& reader, token first,
+                const source_origin& origin, const std::string& path,
+                parse_state& state, std::size_t depth)
+{
+  account_node(state, origin, path, first.mark, depth);
+
   if (first.type == YAML_ALIAS_EVENT)
     fail(yaml_error_code::unsupported_feature, origin, path, first.mark,
          "YAML aliases are not supported");
@@ -177,8 +207,8 @@ node parse_node(event_reader& reader, token first,
     const std::string item_path = kind == node_kind::sequence
         ? path + "[" + std::to_string(index) + "]"
         : path;
-    result.children.push_back(parse_node(reader, std::move(next), origin,
-                                         item_path));
+    result.children.push_back(parse_node(
+        reader, std::move(next), origin, item_path, state, depth + 1));
     ++index;
   }
 
@@ -228,9 +258,14 @@ void validate_tree(const node& value, const source_origin& origin,
                    mark.column, std::move(message));
 }
 
-node parse_document(std::string_view bytes, const source_origin& origin)
+node parse_document(std::string_view bytes, const source_origin& origin,
+                    const parse_limits& limits)
 {
-  event_reader reader(bytes, origin.document());
+  if (bytes.size() > limits.maximum_document_bytes)
+    fail(yaml_error_code::resource_limit, origin, "$", {1, 1},
+         "YAML document exceeds configured byte limit");
+
+  event_reader reader(bytes, origin.document(), limits);
   token event = reader.next();
   if (event.type != YAML_STREAM_START_EVENT)
     fail(yaml_error_code::syntax, origin, "$", event.mark,
@@ -248,7 +283,8 @@ node parse_document(std::string_view bytes, const source_origin& origin)
   if (event.type == YAML_DOCUMENT_END_EVENT)
     fail(yaml_error_code::invalid_document, origin, "$", event.mark,
          "empty YAML document");
-  node root = parse_node(reader, std::move(event), origin, "$");
+  parse_state state{limits, 0};
+  node root = parse_node(reader, std::move(event), origin, "$", state, 1);
 
   event = reader.next();
   if (event.type != YAML_DOCUMENT_END_EVENT)
@@ -387,4 +423,4 @@ const std::string& yaml_error::path() const noexcept { return path_; }
 std::uint32_t yaml_error::line() const noexcept { return line_; }
 std::uint32_t yaml_error::column() const noexcept { return column_; }
 
-} // namespace pkgsource::yaml_adapter
+} // namespace pkgsource::yaml

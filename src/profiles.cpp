@@ -6,30 +6,14 @@
 #include <utility>
 #include <vector>
 
-namespace pkgsource::yaml_adapter {
+namespace pkgsource::yaml {
 
-parsed_profile_document::parsed_profile_document(
-    source_origin origin, std::vector<profile_declaration> declarations)
-    : origin_(std::move(origin)), declarations_(std::move(declarations))
-{
-}
-
-const source_origin& parsed_profile_document::origin() const noexcept
-{
-  return origin_;
-}
-
-const std::vector<profile_declaration>&
-parsed_profile_document::declarations() const noexcept
-{
-  return declarations_;
-}
-
-parsed_profile_document parse_profiles_yaml_v1(
-    std::string_view bytes, source_origin origin)
+std::vector<profile_declaration> parse_profiles_yaml(
+    std::string_view bytes, source_origin origin,
+    const parse_limits& limits)
 {
   using namespace detail;
-  node root = parse_document(bytes, origin);
+  node root = parse_document(bytes, origin, limits);
   allow_keys(root, origin, "$", {"format", "profiles"});
   require_format(root, origin, "zeppe-lin.profiles/1");
   const node& profiles = required_key(root, "profiles", origin, "$");
@@ -66,15 +50,7 @@ parsed_profile_document parse_profiles_yaml_v1(
               std::move(members));
         }));
   }
-  return parsed_profile_document(std::move(origin), std::move(declarations));
+  return declarations;
 }
 
-profile_catalog seal_profiles_yaml_v1(std::string_view bytes,
-                                      source_origin origin)
-{
-  parsed_profile_document parsed = parse_profiles_yaml_v1(
-      bytes, std::move(origin));
-  return profile_catalog::seal(parsed.declarations());
-}
-
-} // namespace pkgsource::yaml_adapter
+} // namespace pkgsource::yaml

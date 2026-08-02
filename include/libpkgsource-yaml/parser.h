@@ -2,19 +2,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /*! \file parser.h
- *  \brief Strict recipe.yml/1, recipe.yml/2, and profiles.yml/1 syntax adapter.
+ *  \brief Strict native recipe and profile YAML parsing.
  */
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include <libpkgsource/recipe.h>
 #include <libpkgsource/snapshot.h>
 
-namespace pkgsource::yaml_adapter {
+namespace pkgsource::yaml {
 
 /*! \brief Stable YAML frontend failure categories. */
 enum class yaml_error_code {
@@ -26,6 +28,15 @@ enum class yaml_error_code {
   missing_key,
   invalid_type,
   invalid_value,
+  resource_limit,
+};
+
+/*! \brief Bounded parser resources for one in-memory document. */
+struct parse_limits final {
+  std::size_t maximum_document_bytes = 1024U * 1024U;
+  std::size_t maximum_scalar_bytes = 256U * 1024U;
+  std::size_t maximum_nodes = 65'536U;
+  std::size_t maximum_depth = 64U;
 };
 
 /*! \brief Structured syntax error with exact diagnostic provenance. */
@@ -46,54 +57,14 @@ private:
   std::uint32_t column_;
 };
 
-/*! \brief Parser-neutral profile declarations from one profiles.yml/1 document. */
-class parsed_profile_document final {
-public:
-  parsed_profile_document(source_origin origin,
-                          std::vector<profile_declaration> declarations);
-  [[nodiscard]] const source_origin& origin() const noexcept;
-  [[nodiscard]] const std::vector<profile_declaration>&
-  declarations() const noexcept;
-private:
-  source_origin origin_;
-  std::vector<profile_declaration> declarations_;
-};
-
-/*! \brief Parser-neutral recipe declaration from one native recipe document. */
-class parsed_recipe_document final {
-public:
-  parsed_recipe_document(source_origin origin, recipe_declaration declaration);
-  [[nodiscard]] const source_origin& origin() const noexcept;
-  [[nodiscard]] const recipe_declaration& declaration() const noexcept;
-private:
-  source_origin origin_;
-  recipe_declaration declaration_;
-};
-
-/*! \brief Parse one strict profiles.yml/1 document without sealing it. */
-[[nodiscard]] parsed_profile_document parse_profiles_yaml_v1(
-    std::string_view bytes, source_origin origin);
-
-/*! \brief Parse one strict recipe.yml/1 document without sealing it. */
-[[nodiscard]] parsed_recipe_document parse_recipe_yaml_v1(
-    std::string_view bytes, source_origin origin);
-
-/*! \brief Parse one strict recipe.yml/2 document without sealing it. */
-[[nodiscard]] parsed_recipe_document parse_recipe_yaml_v2(
-    std::string_view bytes, source_origin origin);
-
-/*! \brief Parse and seal one profiles.yml/1 document. */
-[[nodiscard]] profile_catalog seal_profiles_yaml_v1(
-    std::string_view bytes, source_origin origin);
-
-/*! \brief Parse and seal one recipe.yml/1 document. */
-[[nodiscard]] source_snapshot seal_recipe_yaml_v1(
+/*! \brief Parse one strict profiles document into parser-neutral declarations. */
+[[nodiscard]] std::vector<profile_declaration> parse_profiles_yaml(
     std::string_view bytes, source_origin origin,
-    const profile_catalog& profiles);
+    const parse_limits& limits = {});
 
-/*! \brief Parse and seal one recipe.yml/2 document. */
-[[nodiscard]] source_snapshot seal_recipe_yaml_v2(
+/*! \brief Parse one strict recipe document into one parser-neutral declaration. */
+[[nodiscard]] recipe_declaration parse_recipe_yaml(
     std::string_view bytes, source_origin origin,
-    const profile_catalog& profiles);
+    const parse_limits& limits = {});
 
-} // namespace pkgsource::yaml_adapter
+} // namespace pkgsource::yaml

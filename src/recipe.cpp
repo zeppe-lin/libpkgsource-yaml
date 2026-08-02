@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace pkgsource::yaml_adapter {
+namespace pkgsource::yaml {
 namespace {
 
 using namespace detail;
@@ -266,36 +266,17 @@ package_metadata package_metadata_value(const node& package,
 
 } // namespace
 
-parsed_recipe_document::parsed_recipe_document(
-    source_origin origin, recipe_declaration declaration)
-    : origin_(std::move(origin)), declaration_(std::move(declaration))
-{
-}
-const source_origin& parsed_recipe_document::origin() const noexcept
-{
-  return origin_;
-}
-const recipe_declaration& parsed_recipe_document::declaration() const noexcept
-{
-  return declaration_;
-}
-
 namespace {
 
-parsed_recipe_document parse_recipe_yaml(
+recipe_declaration parse_recipe_document(
     std::string_view bytes, source_origin origin,
-    std::string_view expected_format, bool check_program_allowed)
+    const parse_limits& limits)
 {
-  node root = parse_document(bytes, origin);
-  if (check_program_allowed)
-    allow_keys(root, origin, "$",
-               {"format", "package", "requirements", "sources", "build",
-                "check", "lifecycle", "architectures"});
-  else
-    allow_keys(root, origin, "$",
-               {"format", "package", "requirements", "sources", "build",
-                "lifecycle", "architectures"});
-  require_format(root, origin, expected_format);
+  node root = parse_document(bytes, origin, limits);
+  allow_keys(root, origin, "$",
+             {"format", "package", "requirements", "sources", "build",
+              "check", "lifecycle", "architectures"});
+  require_format(root, origin, "zeppe-lin.recipe/1");
 
   const node& package = required_key(root, "package", origin, "$");
   require_kind(package, node_kind::mapping, origin, "package", "package");
@@ -314,7 +295,7 @@ parsed_recipe_document parse_recipe_yaml(
   if (const node* value = find_key(root, "lifecycle"))
     lifecycle = lifecycle_value(*value, origin, "lifecycle");
 
-  recipe_declaration declaration(
+  return recipe_declaration(
       std::move(release), std::move(metadata),
       sources_value(sources, origin, "sources"),
       program_value(build, origin, "build"),
@@ -322,42 +303,15 @@ parsed_recipe_document parse_recipe_yaml(
       std::move(lifecycle),
       architectures_value(find_key(root, "architectures"), origin),
       provenance(origin, "document", root), std::move(check));
-  return parsed_recipe_document(std::move(origin), std::move(declaration));
 }
 
 } // namespace
 
-parsed_recipe_document parse_recipe_yaml_v1(
-    std::string_view bytes, source_origin origin)
+recipe_declaration parse_recipe_yaml(
+    std::string_view bytes, source_origin origin,
+    const parse_limits& limits)
 {
-  return parse_recipe_yaml(bytes, std::move(origin),
-                           "zeppe-lin.recipe/1", false);
+  return parse_recipe_document(bytes, std::move(origin), limits);
 }
 
-parsed_recipe_document parse_recipe_yaml_v2(
-    std::string_view bytes, source_origin origin)
-{
-  return parse_recipe_yaml(bytes, std::move(origin),
-                           "zeppe-lin.recipe/2", true);
-}
-
-source_snapshot seal_recipe_yaml_v1(std::string_view bytes,
-                                    source_origin origin,
-                                    const profile_catalog& profiles)
-{
-  parsed_recipe_document parsed = parse_recipe_yaml_v1(bytes, origin);
-  return seal_source(std::move(origin), source_syntax::recipe_yaml_v1,
-                     parsed.declaration(), profiles);
-}
-
-source_snapshot seal_recipe_yaml_v2(std::string_view bytes,
-                                    source_origin origin,
-                                    const profile_catalog& profiles)
-{
-  parsed_recipe_document parsed = parse_recipe_yaml_v2(bytes, origin);
-  return seal_source(std::move(origin), source_syntax::recipe_yaml_v2,
-                     parsed.declaration(), profiles);
-}
-
-
-} // namespace pkgsource::yaml_adapter
+} // namespace pkgsource::yaml
