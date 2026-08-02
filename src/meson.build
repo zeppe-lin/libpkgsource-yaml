@@ -25,6 +25,8 @@ libpkgsource_yaml = library(
   ) + yaml_provider_sources,
   include_directories: [public_inc, internal_inc],
   dependencies: [libpkgsource_dep] + yaml_provider_dependencies,
+  cpp_args: visibility_cpp_args + ['-DPKGSOURCE_YAML_BUILDING_LIBRARY'],
+  gnu_symbol_visibility: 'hidden',
   install: true,
   version: meson.project_version(),
   soversion: '1',
@@ -40,6 +42,7 @@ meson.override_dependency('libpkgsource-yaml', libpkgsource_yaml_dep)
 install_headers(
   '../include/libpkgsource-yaml/libpkgsource-yaml.h',
   '../include/libpkgsource-yaml/parser.h',
+  '../include/libpkgsource-yaml/export.h',
   subdir: 'libpkgsource-yaml',
 )
 
