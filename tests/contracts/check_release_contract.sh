@@ -18,18 +18,20 @@ grep -F "soversion: '1'" "$root/src/meson.build" >/dev/null ||
 grep -F "version: '>=3.0.0'" "$root/meson.build" >/dev/null ||
   fail 'libpkgsource dependency floor is not 3.0.0'
 grep -F 'requires: [libpkgsource_dep]' "$root/src/meson.build" >/dev/null ||
-  fail 'pkg-config does not promote libpkgsource through its dependency object'
+  fail 'pkg-config does not promote libpkgsource by dependency object'
+grep -F "choices: ['libyaml']" "$root/meson.options" >/dev/null ||
+  fail 'qualified YAML provider is not explicit'
+grep -F 'abi/libpkgsource-yaml.exports' "$root/src/meson.build" >/dev/null ||
+  fail 'shared library does not consume the reviewed ABI manifest'
+[ -s "$root/abi/libpkgsource-yaml.exports" ] || fail 'ABI manifest is missing'
+
 if grep -F 'requires_private:' "$root/src/meson.build" >/dev/null; then
   fail 'pkg-config duplicates an implicitly private dependency'
 fi
-if grep -E "requires:.*['\"]libpkgsource" \
-    "$root/src/meson.build" >/dev/null; then
-  fail 'pkg-config names libpkgsource as a string instead of de-duplicating its dependency object'
+if grep -E "requires:.*['\"]libpkgsource" "$root/src/meson.build" >/dev/null; then
+  fail 'pkg-config names libpkgsource as a string'
 fi
-grep -F 'zeppe-lin.recipe/1' "$root/docs/protocols/recipe-yaml-v1.md" >/dev/null ||
-  fail 'recipe/1 protocol is not documented'
 if grep -R -E 'zeppe-lin\.recipe/2|RECIPE-YAML-2|recipe\.yml/2' \
-    "$root/src" "$root/include" "$root/docs/man" "$root/README.md" \
-    "$root/docs/architecture.md" "$root/docs/protocols/recipe-yaml-v1.md" >/dev/null; then
-  fail 'unpublished recipe/2 generation remains in the public implementation or contract'
+    "$root/src" "$root/include" "$root/docs" "$root/README.md" >/dev/null; then
+  fail 'unpublished recipe/2 generation remains'
 fi

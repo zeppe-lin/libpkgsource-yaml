@@ -67,6 +67,35 @@ if get_option('tests').enabled()
     )
   endforeach
 
+  foreach contract : [
+    'documentation-install-contract',
+    'html-docs-contract',
+    'manpage-source',
+    'manpage-normalizer',
+  ]
+    test(
+      contract,
+      sh,
+      args: [
+        join_paths(meson.current_source_dir(), 'contracts/check_' + contract.replace('-', '_') + '.sh'),
+        meson.project_source_root(),
+      ],
+    )
+  endforeach
+
+  pandoc = find_program('pandoc', required: false)
+  if pandoc.found()
+    test(
+      'manpage-generated',
+      sh,
+      args: [
+        join_paths(meson.current_source_dir(), 'contracts/check_manpage_generated.sh'),
+        meson.project_source_root(),
+        pandoc.full_path(),
+      ],
+    )
+  endif
+
   test(
     'metadata',
     sh,
