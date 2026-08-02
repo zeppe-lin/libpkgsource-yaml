@@ -38,6 +38,12 @@ if [ "$major" -ne 3 ] || [ "$minor" -lt 1 ]; then
 fi
 
 canonicalizer=$root/tools/canonicalize-man-roff.awk
+
+highlighting_option=--no-highlight
+if "$pandoc" --help 2>/dev/null |
+    grep -F -- '--syntax-highlighting' >/dev/null; then
+  highlighting_option=--syntax-highlighting=none
+fi
 [ -f "$canonicalizer" ] || fail 'missing roff canonicalizer'
 mkdir -p "$root/docs/man/generated"
 
@@ -57,7 +63,7 @@ do
     --fail-if-warnings \
     --eol=lf \
     --wrap=none \
-    --no-highlight \
+    "$highlighting_option" \
     "$source" > "$raw"
 
   printf '.\\" Generated from docs/man/%s.md; do not edit.\n' "$page" \

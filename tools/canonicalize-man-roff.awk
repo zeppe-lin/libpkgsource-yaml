@@ -1,9 +1,21 @@
 # Canonicalize semantically equivalent Pandoc man-writer output.
 #
-# Pandoc 3.x releases differ in two presentation details used by this project:
-# syntax-highlighting escapes may appear inside .EX/.EE blocks, and bullet lists
-# may use either \[bu] or \(bu. Neither difference is part of the manual-page
-# contract, so normalize both before comparing or committing generated roff.
+# Pandoc 3.x releases differ in presentation details that are not part of this
+# project's manual-page contract: syntax-highlighting escapes may appear inside
+# .EX/.EE blocks, and special characters may use either historical two-byte
+# names such as \(bu or long names such as \[bu]. Normalize both classes before
+# comparing or committing generated roff.
+
+function normalize_two_character_escapes(line, before, name, after) {
+  while (match(line, /\\\([^[:space:]][^[:space:]]/)) {
+    before = substr(line, 1, RSTART - 1)
+    name = substr(line, RSTART + 2, 2)
+    after = substr(line, RSTART + RLENGTH)
+    line = before "\\[" name "]" after
+  }
+
+  return line
+}
 
 /^\.EX$/ {
   in_example = 1
@@ -24,9 +36,6 @@
     gsub(/\\f\[[^]]+\]/, "", line)
   }
 
-  if (line == ".IP \\(bu 2") {
-    line = ".IP \\[bu] 2"
-  }
-
+  line = normalize_two_character_escapes(line)
   print line
 }

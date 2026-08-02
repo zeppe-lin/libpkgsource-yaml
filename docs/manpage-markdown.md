@@ -57,12 +57,15 @@ The generator uses Pandoc 3.1 through 3.x with:
 --fail-if-warnings
 --eol=lf
 --wrap=none
---no-highlight
+--syntax-highlighting=none  # Pandoc versions that provide it
+--no-highlight               # older supported Pandoc 3.x versions
 ```
 
-Project-owned canonicalization removes writer-added font escapes inside exact
-examples and normalizes equivalent bullet macros. A new Pandoc major version
-requires explicit compatibility review.
+The generator selects the non-deprecated highlighting option supported by the
+installed Pandoc 3.x release. Project-owned canonicalization removes
+writer-added font escapes inside exact examples and normalizes equivalent
+two-character roff special-character spellings, including bullets, quotes, and
+`@`. A new Pandoc major version requires explicit compatibility review.
 
 Generated roff is compared byte-for-byte after canonicalization and must pass
 `mandoc -Tlint`.
