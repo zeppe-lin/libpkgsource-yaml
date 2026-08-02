@@ -31,3 +31,27 @@ do
   grep -F "@param $parameter " "$header" >/dev/null ||
     fail "yaml_error constructor parameter is undocumented: $parameter"
 done
+
+for observer in code document path line column
+do
+  observer_line=$(grep -n " $observer() const noexcept;" "$header" | cut -d: -f1)
+  [ -n "$observer_line" ] || fail "yaml_error observer is missing: $observer"
+
+  first_line=$((observer_line - 8))
+  [ "$first_line" -gt 0 ] || first_line=1
+  sed -n "${first_line},${observer_line}p" "$header" |
+    grep -F '@return ' >/dev/null ||
+    fail "yaml_error observer return is undocumented: $observer"
+done
+
+for function in parse_profiles_yaml parse_recipe_yaml
+do
+  function_line=$(grep -n "^$function(" "$header" | cut -d: -f1)
+  [ -n "$function_line" ] || fail "public parser function is missing: $function"
+
+  first_line=$((function_line - 24))
+  [ "$first_line" -gt 0 ] || first_line=1
+  sed -n "${first_line},${function_line}p" "$header" |
+    grep -F '@return ' >/dev/null ||
+    fail "public parser return is undocumented: $function"
+done

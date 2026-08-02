@@ -92,15 +92,39 @@ public:
   /** Destroy one parser failure. */
   ~yaml_error() override;
 
-  /** Return the stable parser failure category. */
+  /**
+   * Return the stable parser failure category.
+   *
+   * @return The category supplied when the failure was constructed.
+   */
   [[nodiscard]] yaml_error_code code() const noexcept;
-  /** Return the caller-supplied document label. */
+
+  /**
+   * Return the caller-supplied document label.
+   *
+   * @return A reference valid for the lifetime of this exception object.
+   */
   [[nodiscard]] const std::string& document() const noexcept;
-  /** Return the protocol path associated with the failure. */
+
+  /**
+   * Return the protocol path associated with the failure.
+   *
+   * @return A reference valid for the lifetime of this exception object.
+   */
   [[nodiscard]] const std::string& path() const noexcept;
-  /** Return the one-based source line. */
+
+  /**
+   * Return the one-based source line.
+   *
+   * @return The source line, or zero when the provider supplied no location.
+   */
   [[nodiscard]] std::uint32_t line() const noexcept;
-  /** Return the one-based source column. */
+
+  /**
+   * Return the one-based source column.
+   *
+   * @return The source column, or zero when the provider supplied no location.
+   */
   [[nodiscard]] std::uint32_t column() const noexcept;
 
 private:
