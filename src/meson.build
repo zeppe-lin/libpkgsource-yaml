@@ -13,15 +13,17 @@ yaml_provider_dependencies = [libyaml_dep]
 elf_export_generator = find_program(
   meson.project_source_root() / 'tools/generate-elf-export-script.sh',
 )
+elf_export_script_name = 'libpkgsource-yaml.exports.map'
+elf_export_script_path = meson.current_build_dir() / elf_export_script_name
 elf_export_script = configure_file(
   input: '../abi/libpkgsource-yaml.exports',
-  output: 'libpkgsource-yaml.exports.map',
+  output: elf_export_script_name,
   command: [elf_export_generator, '@INPUT@'],
   capture: true,
 )
 
 library_link_args = [
-  '-Wl,--version-script=' + elf_export_script.full_path(),
+  '-Wl,--version-script=' + elf_export_script_path,
 ]
 library_link_depends = [elf_export_script]
 

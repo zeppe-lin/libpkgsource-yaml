@@ -11,6 +11,11 @@ fail()
 
 grep -F "version: '1.0.0'" "$root/meson.build" >/dev/null ||
   fail 'project version is not 1.0.0'
+grep -F "meson_version: '>=1.2.0'" "$root/meson.build" >/dev/null ||
+  fail 'declared Meson floor is not 1.2.0'
+if grep -F 'elf_export_script.full_path()' "$root/src/meson.build" >/dev/null; then
+  fail 'export script path requires Meson 1.4 file.full_path()'
+fi
 grep -F '## 1.0.0' "$root/HISTORY.md" >/dev/null ||
   fail 'release history is not finalized'
 grep -F "soversion: '1'" "$root/src/meson.build" >/dev/null ||
