@@ -2,21 +2,71 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 if get_option('tests').enabled()
   foreach test_spec : [
-    ['profiles', 'profiles/contract_test.cpp'],
-    ['recipe', 'recipe/contract_test.cpp'],
-    ['limits', 'parser/limits_test.cpp'],
-    ['public-headers', 'public/headers_test.cpp'],
+    ['provider-events', 'internal/yaml_event_reader_test.cpp'],
+    ['parser-subset', 'parser/subset_test.cpp'],
+    ['parser-limits', 'parser/limits_test.cpp'],
+    ['profiles-content', 'profiles/content_test.cpp'],
+    ['profiles-schema', 'profiles/schema_test.cpp'],
+    ['recipe-content', 'recipe/content_test.cpp'],
+    ['recipe-schema', 'recipe/schema_test.cpp'],
+    ['sealing-integration', 'integration/sealing_test.cpp'],
+    ['public-umbrella', 'public/umbrella_header_test.cpp'],
+    ['public-component', 'public/parser_header_test.cpp'],
   ]
+    test_sources = [test_spec[1]]
+    test_dependencies = [libpkgsource_yaml_dep]
+    test_include_directories = []
+    if test_spec[0] == 'provider-events'
+      test_sources += [
+        '../src/parser.cpp',
+        '../src/internal/yaml_event_reader_libyaml.cpp',
+      ]
+      test_dependencies = [libpkgsource_dep] + yaml_provider_dependencies
+      test_include_directories = [internal_inc]
+    endif
     test_executable = executable(
       test_spec[0] + '-test',
-      test_spec[1],
-      dependencies: libpkgsource_yaml_dep,
+      test_sources,
+      include_directories: test_include_directories,
+      dependencies: test_dependencies,
+      cpp_args: visibility_cpp_args,
       install: false,
     )
     test(test_spec[0], test_executable)
   endforeach
 
   sh = find_program('sh')
+  if library_kind == 'shared'
+    nm = find_program('nm')
+    test(
+      'abi-surface',
+      sh,
+      args: [
+        join_paths(meson.current_source_dir(), 'contracts/check_abi_surface.sh'),
+        nm.full_path(),
+        libpkgsource_yaml.full_path(),
+        meson.project_source_root() / 'abi/libpkgsource-yaml.exports',
+      ],
+    )
+  endif
+
+  foreach contract : [
+    'provider-boundary',
+    'parser-boundary',
+    'documentation-contract',
+    'release-contract',
+    'style-contract',
+  ]
+    test(
+      contract,
+      sh,
+      args: [
+        join_paths(meson.current_source_dir(), 'contracts/check_' + contract.replace('-', '_') + '.sh'),
+        meson.project_source_root(),
+      ],
+    )
+  endforeach
+
   test(
     'metadata',
     sh,
@@ -26,28 +76,17 @@ if get_option('tests').enabled()
       meson.project_version(),
     ],
   )
-  test(
-    'parser-boundary',
-    sh,
-    args: [
-      join_paths(meson.current_source_dir(), 'contracts/check_parser_boundary.sh'),
-      meson.project_source_root(),
-    ],
-  )
-  test(
-    'documentation-contract',
-    sh,
-    args: [
-      join_paths(meson.current_source_dir(), 'contracts/check_documentation_contract.sh'),
-      meson.project_source_root(),
-    ],
-  )
-  test(
-    'release-contract',
-    sh,
-    args: [
-      join_paths(meson.current_source_dir(), 'contracts/check_release_contract.sh'),
-      meson.project_source_root(),
-    ],
-  )
+
+  clang_format = find_program('clang-format-17', required: false)
+  if clang_format.found()
+    test(
+      'format',
+      sh,
+      args: [
+        join_paths(meson.current_source_dir(), 'contracts/check_format.sh'),
+        clang_format.full_path(),
+        meson.project_source_root(),
+      ],
+    )
+  endif
 endif

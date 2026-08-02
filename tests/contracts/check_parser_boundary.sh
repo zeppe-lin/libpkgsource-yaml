@@ -27,3 +27,7 @@ grep -F 'parse_recipe_yaml(' "$root/include/libpkgsource-yaml/parser.h" >/dev/nu
   fail 'recipe parser entry point is missing'
 grep -F 'resource_limit' "$root/include/libpkgsource-yaml/parser.h" >/dev/null ||
   fail 'bounded parser failure category is missing'
+
+if grep -R -E 'libpkgsource-codec|libpkgsource-plan|libpkgplan'     "$root/src" "$root/include" >/dev/null; then
+  fail 'parser imports unrelated adapter or planner authority'
+fi

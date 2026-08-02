@@ -1,123 +1,92 @@
 // SPDX-FileCopyrightText: 2026 Alexandr Savca
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include <libpkgsource-yaml/parser.h>
+#include <libpkgsource-yaml/libpkgsource-yaml.h>
 
-#include <cassert>
-#include <functional>
+#include "../support/test_support.h"
+
+#include <cstddef>
 #include <string>
-
-using namespace pkgsource;
-using namespace pkgsource::yaml;
 
 namespace {
 
-template <typename Function>
-void expect_limit(Function&& function)
-{
-  try {
-    function();
-    assert(false);
-  } catch (const yaml_error& failure) {
-    assert(failure.code() == yaml_error_code::resource_limit);
-    assert(failure.line() > 0);
-    assert(failure.column() > 0);
-  }
-}
-
-const std::string document =
+constexpr std::string_view document =
     "format: zeppe-lin.profiles/1\n"
     "profiles:\n"
     "  compiler:\n"
     "    members:\n"
     "      - package: gcc\n";
 
-void test_document_limit()
+void expect_limit(const pkgsource::yaml::parse_limits& limits)
 {
-  parse_limits limits;
+  test_support::expect_yaml_error(
+      pkgsource::yaml::yaml_error_code::resource_limit, "profiles.yml", "",
+      [&] {
+        (void)pkgsource::yaml::parse_profiles_yaml(
+            document, pkgsource::source_origin("profiles.yml"), limits);
+      });
+}
+
+void rejects_each_resource_beyond_its_limit()
+{
+  pkgsource::yaml::parse_limits limits;
   limits.maximum_document_bytes = document.size() - 1;
-  expect_limit([&] {
-    (void)parse_profiles_yaml(
-        document, source_origin("profiles.yml"), limits);
-  });
-}
+  expect_limit(limits);
 
-void test_scalar_limit()
-{
-  parse_limits limits;
+  limits = {};
   limits.maximum_scalar_bytes = 8;
-  expect_limit([&] {
-    (void)parse_profiles_yaml(
-        document, source_origin("profiles.yml"), limits);
-  });
-}
+  expect_limit(limits);
 
-void test_node_limit()
-{
-  parse_limits limits;
+  limits = {};
   limits.maximum_nodes = 4;
-  expect_limit([&] {
-    (void)parse_profiles_yaml(
-        document, source_origin("profiles.yml"), limits);
-  });
-}
+  expect_limit(limits);
 
-void test_depth_limit()
-{
-  parse_limits limits;
+  limits = {};
   limits.maximum_depth = 3;
-  expect_limit([&] {
-    (void)parse_profiles_yaml(
-        document, source_origin("profiles.yml"), limits);
-  });
+  expect_limit(limits);
 }
 
-void test_exact_document_boundary()
+void accepts_each_exact_boundary()
 {
-  parse_limits limits;
+  pkgsource::yaml::parse_limits limits;
   limits.maximum_document_bytes = document.size();
-  const auto declarations = parse_profiles_yaml(
-      document, source_origin("profiles.yml"), limits);
-  assert(declarations.size() == 1);
-}
+  test_support::require_equal(
+      pkgsource::yaml::parse_profiles_yaml(
+          document, pkgsource::source_origin("profiles.yml"), limits)
+          .size(),
+      std::size_t{1}, "exact document-byte boundary must be accepted");
 
-
-void test_exact_scalar_boundary()
-{
-  parse_limits limits;
+  limits = {};
   limits.maximum_scalar_bytes = std::string("zeppe-lin.profiles/1").size();
-  const auto declarations = parse_profiles_yaml(
-      document, source_origin("profiles.yml"), limits);
-  assert(declarations.size() == 1);
-}
+  test_support::require_equal(
+      pkgsource::yaml::parse_profiles_yaml(
+          document, pkgsource::source_origin("profiles.yml"), limits)
+          .size(),
+      std::size_t{1}, "exact scalar-byte boundary must be accepted");
 
-void test_exact_node_boundary()
-{
-  parse_limits limits;
+  limits = {};
   limits.maximum_nodes = 12;
-  const auto declarations = parse_profiles_yaml(
-      document, source_origin("profiles.yml"), limits);
-  assert(declarations.size() == 1);
-}
+  test_support::require_equal(
+      pkgsource::yaml::parse_profiles_yaml(
+          document, pkgsource::source_origin("profiles.yml"), limits)
+          .size(),
+      std::size_t{1}, "exact node boundary must be accepted");
 
-void test_exact_depth_boundary()
-{
-  parse_limits limits;
+  limits = {};
   limits.maximum_depth = 6;
-  const auto declarations = parse_profiles_yaml(
-      document, source_origin("profiles.yml"), limits);
-  assert(declarations.size() == 1);
+  test_support::require_equal(
+      pkgsource::yaml::parse_profiles_yaml(
+          document, pkgsource::source_origin("profiles.yml"), limits)
+          .size(),
+      std::size_t{1}, "exact depth boundary must be accepted");
 }
 
 } // namespace
 
 int main()
 {
-  test_document_limit();
-  test_scalar_limit();
-  test_node_limit();
-  test_depth_limit();
-  test_exact_document_boundary();
-  test_exact_scalar_boundary();
-  test_exact_node_boundary();
-  test_exact_depth_boundary();
+  return test_support::run({
+      {"rejects each resource beyond its limit",
+       rejects_each_resource_beyond_its_limit},
+      {"accepts each exact boundary", accepts_each_exact_boundary},
+  });
 }
