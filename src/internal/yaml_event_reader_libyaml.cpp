@@ -7,6 +7,7 @@
 #include <yaml.h>
 
 #include <limits>
+#include <new>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -110,12 +111,7 @@ public:
         maximum_scalar_bytes_(maximum_scalar_bytes)
   {
     if (yaml_parser_initialize(&parser_) == 0) {
-      throw yaml_error(yaml_error_code::syntax,
-                       document_,
-                       "$",
-                       1,
-                       1,
-                       "cannot initialize YAML parser");
+      throw std::bad_alloc();
     }
 
     static constexpr unsigned char empty_input = 0;
@@ -134,6 +130,21 @@ public:
   {
     native_event event;
     if (yaml_parser_parse(&parser_, event.output()) == 0) {
+      switch (parser_.error) {
+      case YAML_MEMORY_ERROR:
+        throw std::bad_alloc();
+      case YAML_READER_ERROR:
+      case YAML_SCANNER_ERROR:
+      case YAML_PARSER_ERROR:
+        break;
+      case YAML_NO_ERROR:
+      case YAML_COMPOSER_ERROR:
+      case YAML_WRITER_ERROR:
+      case YAML_EMITTER_ERROR:
+        throw std::logic_error(
+            "libyaml parser failed outside parser error domain");
+      }
+
       const source_mark mark{
           one_based_position(parser_.problem_mark.line),
           one_based_position(parser_.problem_mark.column),

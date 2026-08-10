@@ -1,5 +1,21 @@
 # History
 
+## 1.0.1
+
+Testing-foundation hardening release.
+
+- Preserved provider allocation failures as `std::bad_alloc` instead of
+  misreporting them as malformed YAML.
+- Kept unsupported YAML features outside the retained-node resource budget.
+- Validated dynamic profile names before descendant provenance paths can reuse
+  them, preventing core provenance failures from escaping the YAML adapter.
+- Reorganized tests by mechanism, protocol, integration, public-header,
+  installed-consumer, support, and repository-contract ownership.
+- Made the installed consumer execute the parser so shared/static pkg-config
+  qualification proves both the semantic-owner and private libyaml closure.
+- Pinned hosted provider qualification to the exact upstream libyaml 0.2.5
+  release commit.
+
 ## 1.0.0
 
 First independent YAML frontend release.

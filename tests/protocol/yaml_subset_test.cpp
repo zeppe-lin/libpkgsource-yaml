@@ -118,6 +118,28 @@ void rejects_empty_documents()
   });
 }
 
+void unsupported_features_precede_retained_node_budget()
+{
+  pkgsource::yaml::parse_limits limits;
+  limits.maximum_nodes = 0;
+
+  expect_yaml_error(
+      yaml_error_code::unsupported_feature, "profiles.yml", "$", [&] {
+        (void)parse_profiles_yaml(
+            "*missing-anchor\n", source_origin("profiles.yml"), limits);
+      });
+  expect_yaml_error(
+      yaml_error_code::unsupported_feature, "profiles.yml", "$", [&] {
+        (void)parse_profiles_yaml(
+            "&root {}\n", source_origin("profiles.yml"), limits);
+      });
+  expect_yaml_error(
+      yaml_error_code::unsupported_feature, "profiles.yml", "$", [&] {
+        (void)parse_profiles_yaml(
+            "!custom {}\n", source_origin("profiles.yml"), limits);
+      });
+}
+
 void reports_provider_syntax_failures()
 {
   expect_yaml_error(yaml_error_code::syntax, "profiles.yml", "$", [] {
@@ -141,6 +163,8 @@ int main()
       {"rejects multiple documents", rejects_multiple_documents},
       {"rejects complex mapping keys", rejects_complex_mapping_keys},
       {"rejects empty documents", rejects_empty_documents},
+      {"unsupported features precede retained node budget",
+       unsupported_features_precede_retained_node_budget},
       {"reports provider syntax failures", reports_provider_syntax_failures},
   });
 }

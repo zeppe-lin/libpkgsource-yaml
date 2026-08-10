@@ -73,8 +73,10 @@ document layer.
 
 The `what()` message is not a stable machine interface. Parser code translates
 only `pkgsource::error` raised while constructing the specific declaration value
-at one YAML location. Allocation failures, logic failures, and errors from later
-semantic sealing retain their original types.
+at one YAML location. Provider and C++ allocation failures retain
+`std::bad_alloc`; impossible provider-state failures remain logic defects rather
+than being mislabeled as caller syntax. Errors from later semantic sealing retain
+their original types.
 
 ## Resource model
 
@@ -99,11 +101,12 @@ src/internal/               provider, document tree, and grammar helpers
 abi/                        reviewed ELF export manifest
 docs/protocols/             document protocol specifications
 docs/man/                   canonical manual sources and generated roff
-tests/parser/               provider-neutral YAML subset and limits
-tests/profiles/             profile grammar contracts
-tests/recipe/               recipe grammar contracts
+tests/mechanism/            libyaml event normalization
+tests/protocol/             YAML subset, limits, and document grammars
 tests/integration/          explicit semantic-sealing handoff
-tests/internal/             provider normalization contracts
+tests/header/               independently compiled public headers
+tests/installed/            staged pkg-config parser consumer
+tests/support/              shared test-only helpers and documents
 tests/contracts/            repository, ABI, metadata, and documentation gates
 tools/                      deterministic generation and installation tools
 ```

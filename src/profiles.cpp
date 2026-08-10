@@ -28,6 +28,20 @@ std::vector<profile_declaration> parse_profiles_yaml(std::string_view bytes,
     const node& name_node = profiles.children[profile_index];
     const node& definition = profiles.children[profile_index + 1];
     const std::string definition_path = "profiles." + name_node.scalar;
+
+    // Admit the dynamic mapping key before reusing it inside descendant
+    // provenance paths. Otherwise an unsafe profile key can make core
+    // declaration_provenance fail while member material is being decoded,
+    // leaking a libpkgsource error through the parser boundary.
+    profile_reference reference =
+        semantic_value(origin, definition_path, name_node, [&] {
+          return profile_reference("@" + name_node.scalar);
+        });
+    declaration_provenance declaration_site =
+        semantic_value(origin, definition_path, name_node, [&] {
+          return provenance(origin, definition_path, name_node);
+        });
+
     allow_keys(definition, origin, definition_path, {"members"});
     const node& members_node =
         required_key(definition, "members", origin, definition_path);
@@ -47,10 +61,9 @@ std::vector<profile_declaration> parse_profiles_yaml(std::string_view bytes,
     }
     declarations.push_back(
         semantic_value(origin, definition_path, name_node, [&] {
-          return profile_declaration(
-              profile_reference("@" + name_node.scalar),
-              provenance(origin, definition_path, name_node),
-              std::move(members));
+          return profile_declaration(std::move(reference),
+                                     std::move(declaration_site),
+                                     std::move(members));
         }));
   }
   return declarations;

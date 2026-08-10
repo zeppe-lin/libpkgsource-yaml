@@ -56,6 +56,19 @@ void rejects_profiles_without_members()
       });
 }
 
+void rejects_unsafe_profile_key_before_descendant_provenance()
+{
+  expect_yaml_error(yaml_error_code::invalid_value, "profiles.yml", "", [] {
+    (void)parse_profiles_yaml(
+        "format: zeppe-lin.profiles/1\n"
+        "profiles:\n"
+        "  \"bad\\nname\":\n"
+        "    members:\n"
+        "      - package: gcc\n",
+        source_origin("profiles.yml"));
+  });
+}
+
 void rejects_scalar_member_shorthand()
 {
   expect_yaml_error(yaml_error_code::invalid_type,
@@ -82,6 +95,8 @@ int main()
       {"reports invalid profile names at their path",
        reports_invalid_profile_names_at_their_schema_path},
       {"rejects profiles without members", rejects_profiles_without_members},
+      {"rejects unsafe profile key before descendant provenance",
+       rejects_unsafe_profile_key_before_descendant_provenance},
       {"rejects scalar member shorthand", rejects_scalar_member_shorthand},
   });
 }

@@ -2,16 +2,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 if get_option('tests').enabled()
   foreach test_spec : [
-    ['provider-events', 'internal/yaml_event_reader_test.cpp'],
-    ['parser-subset', 'parser/subset_test.cpp'],
-    ['parser-limits', 'parser/limits_test.cpp'],
-    ['profiles-content', 'profiles/content_test.cpp'],
-    ['profiles-schema', 'profiles/schema_test.cpp'],
-    ['recipe-content', 'recipe/content_test.cpp'],
-    ['recipe-schema', 'recipe/schema_test.cpp'],
-    ['sealing-integration', 'integration/sealing_test.cpp'],
-    ['public-umbrella', 'public/umbrella_header_test.cpp'],
-    ['public-component', 'public/parser_header_test.cpp'],
+    ['provider-events', 'mechanism/yaml_event_reader_test.cpp', 'mechanism'],
+    ['parser-subset', 'protocol/yaml_subset_test.cpp', 'protocol'],
+    ['parser-limits', 'protocol/resource_limits_test.cpp', 'protocol'],
+    ['profiles-content', 'protocol/profiles_content_test.cpp', 'protocol'],
+    ['profiles-schema', 'protocol/profiles_schema_test.cpp', 'protocol'],
+    ['recipe-content', 'protocol/recipe_content_test.cpp', 'protocol'],
+    ['recipe-schema', 'protocol/recipe_schema_test.cpp', 'protocol'],
+    ['sealing-integration', 'integration/sealing_test.cpp', 'integration'],
+    ['public-umbrella', 'header/umbrella_header_test.cpp', 'header'],
+    ['public-component', 'header/parser_header_test.cpp', 'header'],
   ]
     test_sources = [test_spec[1]]
     test_dependencies = [libpkgsource_yaml_dep]
@@ -35,7 +35,7 @@ if get_option('tests').enabled()
       cpp_args: visibility_cpp_args,
       install: false,
     )
-    test(test_spec[0], test_executable)
+    test(test_spec[0], test_executable, suite: test_spec[2])
   endforeach
 
   sh = find_program('sh')
@@ -50,41 +50,31 @@ if get_option('tests').enabled()
         libpkgsource_yaml.full_path(),
         meson.project_source_root() / 'abi/libpkgsource-yaml.exports',
       ],
+      suite: 'contracts',
     )
   endif
 
   foreach contract : [
-    'provider-boundary',
-    'parser-boundary',
-    'documentation-contract',
-    'doxygen-contract',
-    'release-contract',
-    'style-contract',
+    ['provider-boundary', 'check_provider_boundary.sh', [meson.project_source_root()]],
+    ['provider-failure-contract', 'check_provider_failure_contract.sh', [meson.project_source_root()]],
+    ['parser-boundary', 'check_parser_boundary.sh', [meson.project_source_root()]],
+    ['test-layout', 'check_test_layout.sh', [meson.project_source_root()]],
+    ['documentation-contract', 'check_documentation_contract.sh', [meson.project_source_root()]],
+    ['doxygen-contract', 'check_doxygen_contract.sh', [meson.project_source_root()]],
+    ['release-contract', 'check_release_contract.sh', [meson.project_source_root()]],
+    ['style-contract', 'check_style_contract.sh', [meson.project_source_root(), meson.project_build_root()]],
+    ['documentation-install-contract', 'check_documentation_install_contract.sh', [meson.project_source_root()]],
+    ['html-docs-contract', 'check_html_docs_contract.sh', [meson.project_source_root()]],
+    ['manpage-source', 'check_manpage_source.sh', [meson.project_source_root()]],
+    ['manpage-normalizer', 'check_manpage_normalizer.sh', [meson.project_source_root()]],
+    ['manpage-writer-options', 'check_manpage_writer_options.sh', [meson.project_source_root()]],
+    ['metadata', 'metadata_test.sh', [meson.project_build_root(), meson.project_version()]],
   ]
     test(
-      contract,
+      contract[0],
       sh,
-      args: [
-        join_paths(meson.current_source_dir(), 'contracts/check_' + contract.replace('-', '_') + '.sh'),
-        meson.project_source_root(),
-      ] + (contract == 'style-contract' ? [meson.project_build_root()] : []),
-    )
-  endforeach
-
-  foreach contract : [
-    'documentation-install-contract',
-    'html-docs-contract',
-    'manpage-source',
-    'manpage-normalizer',
-    'manpage-writer-options',
-  ]
-    test(
-      contract,
-      sh,
-      args: [
-        join_paths(meson.current_source_dir(), 'contracts/check_' + contract.replace('-', '_') + '.sh'),
-        meson.project_source_root(),
-      ],
+      args: [join_paths(meson.current_source_dir(), 'contracts', contract[1])] + contract[2],
+      suite: 'contracts',
     )
   endforeach
 
@@ -98,18 +88,9 @@ if get_option('tests').enabled()
         meson.project_source_root(),
         pandoc.full_path(),
       ],
+      suite: 'contracts',
     )
   endif
-
-  test(
-    'metadata',
-    sh,
-    args: [
-      join_paths(meson.current_source_dir(), 'contracts/metadata_test.sh'),
-      meson.project_build_root(),
-      meson.project_version(),
-    ],
-  )
 
   clang_format = find_program('clang-format-17', required: false)
   if clang_format.found()
@@ -121,6 +102,7 @@ if get_option('tests').enabled()
         clang_format.full_path(),
         meson.project_source_root(),
       ],
+      suite: 'contracts',
     )
   endif
 endif

@@ -68,8 +68,6 @@ node parse_node(yaml_event_reader& reader,
                 parse_state& state,
                 std::size_t depth)
 {
-  account_node(state, origin, path, first.mark, depth);
-
   if (first.kind == yaml_event_kind::alias) {
     fail(yaml_error_code::unsupported_feature,
          origin,
@@ -111,6 +109,11 @@ node parse_node(yaml_event_reader& reader,
          first.mark,
          "custom or incompatible YAML tags are not supported");
   }
+
+  // Resource accounting covers only nodes retained in the normalized tree.
+  // Rejected aliases, anchors, and tags must keep their feature category even
+  // when the caller selected a zero retained-node ceiling.
+  account_node(state, origin, path, first.mark, depth);
 
   node result{kind, first.mark, {}, {}};
   if (kind == node_kind::scalar) {

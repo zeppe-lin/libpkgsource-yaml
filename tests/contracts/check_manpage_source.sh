@@ -45,13 +45,13 @@ check_page()
 }
 
 check_page pkgsource_yaml.3 \
-  '% PKGSOURCE_YAML(3) libpkgsource-yaml 1.0.0 | libpkgsource-yaml' \
+  '% PKGSOURCE_YAML(3) libpkgsource-yaml 1.0.1 | libpkgsource-yaml' \
   'pkgsource_yaml - parse strict native YAML into libpkgsource declarations'
 check_page pkgsource_profiles_yaml.5 \
-  '% PKGSOURCE_PROFILES_YAML(5) libpkgsource-yaml 1.0.0 | libpkgsource-yaml' \
+  '% PKGSOURCE_PROFILES_YAML(5) libpkgsource-yaml 1.0.1 | libpkgsource-yaml' \
   'pkgsource_profiles_yaml - describe the native profiles YAML version 1 protocol'
 check_page pkgsource_recipe_yaml.5 \
-  '% PKGSOURCE_RECIPE_YAML(5) libpkgsource-yaml 1.0.0 | libpkgsource-yaml' \
+  '% PKGSOURCE_RECIPE_YAML(5) libpkgsource-yaml 1.0.1 | libpkgsource-yaml' \
   'pkgsource_recipe_yaml - describe the native recipe YAML version 1 protocol'
 
 grep -F '```cpp' "$root/docs/man/pkgsource_yaml.3.md" >/dev/null ||

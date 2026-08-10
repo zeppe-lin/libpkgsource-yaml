@@ -57,27 +57,50 @@ jobs:
           ref: v3.0.0
           path: dependencies/libpkgsource
 
+      - name: Check out upstream libyaml 0.2.5
+        uses: actions/checkout@v4
+        with:
+          repository: yaml/libyaml
+          ref: 2c891fc7a770e8ba2fec34fc6b545c672beb37e6
+          path: dependencies/libyaml
+
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
+            autoconf \
+            automake \
             binutils \
             clang \
             clang-format-17 \
             doxygen \
             libssl-dev \
-            libyaml-dev \
+            libtool \
+            make \
             mandoc \
             meson \
             ninja-build \
             pandoc \
             pkg-config
 
-      - name: Build and install semantic owner
+      - name: Build and install provider and semantic owner
         shell: bash
         run: |
           set -euo pipefail
           prefix="$RUNNER_TEMP/prefix"
+
+          (
+            cd dependencies/libyaml
+            ./bootstrap
+            ./configure \
+              --prefix="$prefix" \
+              --libdir="$prefix/lib" \
+              --disable-dependency-tracking
+            make -j2
+            make install
+          )
+
+          export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
           meson setup dependencies/libpkgsource/build \
             dependencies/libpkgsource \
             --prefix="$prefix" \
@@ -127,7 +150,7 @@ jobs:
           tests/contracts/check_installed_docs.sh "$stage$PREFIX"
           if [[ '${{ matrix.html_docs }}' == enabled ]]; then
             tests/contracts/check_installed_html_docs.sh \
-              "$stage$PREFIX" 1.0.0
+              "$stage$PREFIX" 1.0.1
           fi
 
       - name: Install
@@ -142,11 +165,11 @@ jobs:
             flags+=(--static)
           fi
           "$CXX" -std=c++17 -Wall -Wextra -Wpedantic -Werror \
-            tests/public/umbrella_header_test.cpp \
+            tests/installed/parser_consumer.cpp \
             $(pkg-config "${flags[@]}" --cflags --libs libpkgsource-yaml) \
             -o installed-consumer
           ./installed-consumer
-          test "$(pkg-config --modversion libpkgsource-yaml)" = 1.0.0
+          test "$(pkg-config --modversion libpkgsource-yaml)" = 1.0.1
 
       - name: Audit shared dependency boundary
         if: matrix.mode == 'shared'
@@ -192,22 +215,45 @@ jobs:
           ref: v3.0.0
           path: dependencies/libpkgsource
 
+      - name: Check out upstream libyaml 0.2.5
+        uses: actions/checkout@v4
+        with:
+          repository: yaml/libyaml
+          ref: 2c891fc7a770e8ba2fec34fc6b545c672beb37e6
+          path: dependencies/libyaml
+
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
+            autoconf \
+            automake \
             clang \
             libssl-dev \
-            libyaml-dev \
+            libtool \
+            make \
             meson \
             ninja-build \
             pkg-config
 
-      - name: Build sanitized semantic owner
+      - name: Build provider and sanitized semantic owner
         shell: bash
         run: |
           set -euo pipefail
           prefix="$RUNNER_TEMP/prefix"
+
+          (
+            cd dependencies/libyaml
+            ./bootstrap
+            ./configure \
+              --prefix="$prefix" \
+              --libdir="$prefix/lib" \
+              --disable-dependency-tracking
+            make -j2
+            make install
+          )
+
+          export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
           meson setup dependencies/libpkgsource/build \
             dependencies/libpkgsource \
             --prefix="$prefix" \
