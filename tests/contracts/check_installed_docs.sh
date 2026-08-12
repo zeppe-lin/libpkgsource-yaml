@@ -22,11 +22,11 @@ for file in \
   MAINTAINING.md \
   COPYING \
   COPYRIGHT \
-  architecture.md \
+  DESIGN.md \
   abi.md \
   code-style.md \
   manpage-markdown.md \
-  testing.md \
+  TESTING.md \
   html.md \
   protocols/profiles-yaml-v1.md \
   protocols/recipe-yaml-v1.md \

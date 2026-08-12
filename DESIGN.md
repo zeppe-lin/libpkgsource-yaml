@@ -1,4 +1,4 @@
-# Architecture
+# libpkgsource-yaml design
 
 ## Authority boundary
 

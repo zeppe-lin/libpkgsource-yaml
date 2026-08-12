@@ -54,7 +54,7 @@ def main() -> int:
     root = args.root.resolve()
     required = [
         "index.html",
-        "architecture.html",
+        "design.html",
         "abi.html",
         "testing.html",
         "manual/pkgsource_yaml.3.html",

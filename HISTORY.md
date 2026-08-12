@@ -1,4 +1,4 @@
-# History
+# libpkgsource-yaml history
 
 ## 1.0.1
 

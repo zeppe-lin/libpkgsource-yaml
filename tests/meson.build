@@ -60,6 +60,8 @@ if get_option('tests').enabled()
     ['parser-boundary', 'check_parser_boundary.sh', [meson.project_source_root()]],
     ['test-layout', 'check_test_layout.sh', [meson.project_source_root()]],
     ['documentation-contract', 'check_documentation_contract.sh', [meson.project_source_root()]],
+    ['documentation-source', 'check_documentation_source.sh', [meson.project_source_root()]],
+    ['repository-contract', 'check_repository_contract.sh', [meson.project_source_root()]],
     ['doxygen-contract', 'check_doxygen_contract.sh', [meson.project_source_root()]],
     ['release-contract', 'check_release_contract.sh', [meson.project_source_root()]],
     ['style-contract', 'check_style_contract.sh', [meson.project_source_root(), meson.project_build_root()]],

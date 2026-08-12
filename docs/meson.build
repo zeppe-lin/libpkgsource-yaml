@@ -4,6 +4,8 @@ project_docdir = get_option('datadir') / 'doc' / meson.project_name()
 
 install_data(
   '../README.md',
+  '../DESIGN.md',
+  '../TESTING.md',
   '../HISTORY.md',
   '../CONTRIBUTING.md',
   '../MAINTAINING.md',
@@ -14,11 +16,9 @@ install_data(
 )
 
 install_data(
-  'architecture.md',
   'abi.md',
   'code-style.md',
   'manpage-markdown.md',
-  'testing.md',
   'html.md',
   install_dir: project_docdir,
   install_tag: 'doc',
@@ -79,16 +79,16 @@ if html_docs_enabled
   )
   html_docs_sources = files(
     '../README.md',
+    '../DESIGN.md',
+    '../TESTING.md',
     '../HISTORY.md',
     '../CONTRIBUTING.md',
     '../MAINTAINING.md',
     '../COPYING',
     '../COPYRIGHT',
     '../Doxyfile',
-    'architecture.md',
     'abi.md',
     'code-style.md',
-    'testing.md',
     'manpage-markdown.md',
     'html.md',
     'protocols/profiles-yaml-v1.md',

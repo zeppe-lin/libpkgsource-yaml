@@ -45,6 +45,8 @@ if grep -R -E 'zeppe-lin\.recipe/2|RECIPE-YAML-2|recipe\.yml/2' \
 fi
 
 provider_commit=2c891fc7a770e8ba2fec34fc6b545c672beb37e6
+[ "$(grep -F -c 'ref: v3.0.1' "$root/.github/workflows/ci.yml")" -eq 2 ] ||
+  fail 'hosted matrices do not both use current libpkgsource 3.0.1'
 [ "$(grep -F -c 'repository: yaml/libyaml' "$root/.github/workflows/ci.yml")" -eq 2 ] ||
   fail 'hosted matrices do not both use upstream libyaml'
 [ "$(grep -F -c "ref: $provider_commit" "$root/.github/workflows/ci.yml")" -eq 2 ] ||

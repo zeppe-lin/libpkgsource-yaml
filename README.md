@@ -69,5 +69,5 @@ artifact under `share/htmldocs/libpkgsource-yaml/1.0.1`. The project repository
 owns generation; a website may publish the resulting tree without rebuilding
 or reinterpreting it.
 
-See `docs/architecture.md`, `docs/protocols/`, and `docs/testing.md` for the
+See `DESIGN.md`, `docs/protocols/`, and `TESTING.md` for the
 normative boundaries and qualification model.

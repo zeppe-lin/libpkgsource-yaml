@@ -16,7 +16,7 @@ With `-Dhtml_docs=enabled`, the build produces:
 ```text
 build/docs/html/libpkgsource-yaml/1.0.1/
 ├── index.html
-├── architecture.html
+├── design.html
 ├── abi.html
 ├── protocols/
 ├── history/

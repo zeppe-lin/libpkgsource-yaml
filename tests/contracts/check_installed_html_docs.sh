@@ -15,7 +15,7 @@ fail()
 
 for file in \
   index.html \
-  architecture.html \
+  design.html \
   abi.html \
   manual/pkgsource_yaml.3.html \
   manual/pkgsource_profiles_yaml.5.html \

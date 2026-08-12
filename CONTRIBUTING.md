@@ -1,4 +1,4 @@
-# Contributing
+# Contributing to libpkgsource-yaml
 
 ## Boundary first
 

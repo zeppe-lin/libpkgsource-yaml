@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: zeppe-lin/libpkgsource
-          ref: v3.0.0
+          ref: v3.0.1
           path: dependencies/libpkgsource
 
       - name: Check out upstream libyaml 0.2.5
@@ -212,7 +212,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: zeppe-lin/libpkgsource
-          ref: v3.0.0
+          ref: v3.0.1
           path: dependencies/libpkgsource
 
       - name: Check out upstream libyaml 0.2.5

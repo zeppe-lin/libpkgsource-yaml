@@ -20,10 +20,10 @@ DOCUMENTS = (
     ("HISTORY.md", "project-history.html", "Project history"),
     ("CONTRIBUTING.md", "contributing.html", "Contributing"),
     ("MAINTAINING.md", "maintaining.html", "Maintaining"),
-    ("docs/architecture.md", "architecture.html", "Architecture"),
+    ("DESIGN.md", "design.html", "Design"),
     ("docs/abi.md", "abi.html", "ELF ABI policy"),
     ("docs/code-style.md", "code-style.html", "Code style"),
-    ("docs/testing.md", "testing.html", "Testing"),
+    ("TESTING.md", "testing.html", "Testing"),
     ("docs/manpage-markdown.md", "manpage-markdown.html", "Manual-page Markdown"),
     ("docs/html.md", "html-documentation.html", "HTML documentation"),
     ("docs/protocols/profiles-yaml-v1.md", "protocols/profiles-yaml-v1.html", "Profiles YAML version 1"),
@@ -74,7 +74,7 @@ def relative_link(page: Path, target: str) -> str:
 def navigation(page: Path, version: str) -> str:
     links = (
         ("Home", "index.html"),
-        ("Architecture", "architecture.html"),
+        ("Design", "design.html"),
         ("ABI", "abi.html"),
         ("Manual", "manual/pkgsource_yaml.3.html"),
         ("API", "api/index.html"),

@@ -17,7 +17,7 @@ require()
 }
 
 for file in README.md HISTORY.md CONTRIBUTING.md MAINTAINING.md \
-  docs/architecture.md docs/abi.md docs/code-style.md docs/testing.md \
+  DESIGN.md docs/abi.md docs/code-style.md TESTING.md \
   docs/manpage-markdown.md docs/html.md \
   docs/history/in-tree-parser-migration.md \
   docs/protocols/profiles-yaml-v1.md docs/protocols/recipe-yaml-v1.md
@@ -27,13 +27,13 @@ done
 
 require "$root/README.md" '## Provider boundary'
 require "$root/README.md" '## Documentation'
-require "$root/docs/architecture.md" '## Parser pipeline'
-require "$root/docs/architecture.md" '## Provider boundary'
-require "$root/docs/architecture.md" '## Installed documentation'
-require "$root/docs/architecture.md" '## HTML publication boundary'
+require "$root/DESIGN.md" '## Parser pipeline'
+require "$root/DESIGN.md" '## Provider boundary'
+require "$root/DESIGN.md" '## Installed documentation'
+require "$root/DESIGN.md" '## HTML publication boundary'
 require "$root/docs/abi.md" '## Canonical manifest'
-require "$root/docs/testing.md" '## Provider behavior'
-require "$root/docs/testing.md" '## Recipe grammar behavior'
+require "$root/TESTING.md" '## Provider behavior'
+require "$root/TESTING.md" '## Recipe grammar behavior'
 require "$root/docs/protocols/profiles-yaml-v1.md" 'zeppe-lin.profiles/1'
 require "$root/docs/protocols/recipe-yaml-v1.md" 'zeppe-lin.recipe/1'
 require "$root/docs/history/in-tree-parser-migration.md" '## No compatibility layer'
@@ -45,7 +45,12 @@ if grep -R -E 'recipe\.yml/2|zeppe-lin\.recipe/2|RECIPE-YAML-2' \
   fail 'discarded recipe/2 generation appears in current documentation'
 fi
 
-for retired in DESIGN.md TESTING.md PROFILES-YAML.md RECIPE-YAML.md MIGRATION.md man
+for duplicate in docs/architecture.md docs/testing.md
+do
+  [ ! -e "$root/$duplicate" ] || fail "duplicate documentation authority remains: $duplicate"
+done
+
+for retired in PROFILES-YAML.md RECIPE-YAML.md MIGRATION.md man
 do
   [ ! -e "$root/$retired" ] || fail "retired root path remains: $retired"
 done
