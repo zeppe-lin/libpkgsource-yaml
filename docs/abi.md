@@ -27,11 +27,16 @@ and parser symbols grouped for review.
 ## Versioning
 
 Version 1.0.0 publishes one SONAME generation and one exact symbol set. Version
-1.1.0 retains that SONAME and exact manifest; its parser/provider hardening does
-not add or remove public symbols. Neither release publishes a named GNU
-symbol-version node. A named node is introduced only when the project has a
-concrete compatible-extension policy that requires more than SONAME and exact
-export control.
+1.1.0 retains that SONAME while adding source-realization syntax against source
+ABI 4. Version 2.0.0 advances to `libpkgsource-yaml.so.2`: the public parser
+returns `recipe_declaration` by value, and that declaration owns a
+`std::vector<source_input>` whose element layout changed in source ABI 4. An
+unchanged symbol manifest or outer vector size is not binary-compatibility
+evidence for that foreign by-value carrier.
+
+No release publishes a named GNU symbol-version node. A named node is introduced
+only when the project has a concrete compatible-extension policy that requires
+more than SONAME and exact export control.
 
 The anonymous export script is not an ABI history mechanism. Its only job is to
 make the current dynamic surface equal the reviewed manifest.

@@ -24,8 +24,8 @@ source_count=$(awk '
   }
   END { print count + 0 }
 ' "$metadata")
-[ "$source_count" -eq 1 ] || {
-  echo "yaml-metadata-test: expected one public libpkgsource requirement, found $source_count" >&2
+[ "$source_count" -eq 2 ] || {
+  echo "yaml-metadata-test: expected two public libpkgsource requirements (libpkgsource < 5.0.0, libpkgsource >= 4.0.0, found $source_count" >&2
   cat "$metadata" >&2
   exit 1
 }

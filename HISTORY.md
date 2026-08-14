@@ -1,5 +1,18 @@
 # libpkgsource-yaml history
 
+## 2.0.0
+
+Source-4 carrier ABI correction.
+
+- Advance the YAML adapter to `libpkgsource-yaml.so.2` because public parser
+  results return source-owned declarations by value and `source_input` changed
+  layout in `libpkgsource.so.4`.
+- Bound the source owner to `libpkgsource >= 4.0.0, < 5.0.0` and qualify the
+  release against `libpkgsource 4.1.0`.
+- Preserve the YAML grammar, `unpack: archive` syntax, and exact reviewed symbol
+  manifest; the ABI transition is about foreign object layout, not new parser
+  vocabulary.
+
 ## 1.1.0
 
 Explicit source-realization release.

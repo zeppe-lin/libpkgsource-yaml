@@ -44,7 +44,7 @@ libpkgsource_yaml = library(
   link_depends: library_link_depends,
   install: true,
   version: meson.project_version(),
-  soversion: '1',
+  soversion: '2',
 )
 
 libpkgsource_yaml_dep = declare_dependency(

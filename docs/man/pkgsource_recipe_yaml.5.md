@@ -1,4 +1,4 @@
-% PKGSOURCE_RECIPE_YAML(5) libpkgsource-yaml 1.1.0 | libpkgsource-yaml
+% PKGSOURCE_RECIPE_YAML(5) libpkgsource-yaml 2.0.0 | libpkgsource-yaml
 
 # NAME
 

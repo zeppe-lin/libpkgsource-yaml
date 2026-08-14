@@ -3,7 +3,7 @@
 project(
   'libpkgsource-yaml',
   'cpp',
-  version: '1.1.0',
+  version: '2.0.0',
   license: 'GPL-3.0-or-later',
   meson_version: '>=1.2.0',
   default_options: [
@@ -25,7 +25,7 @@ endif
 
 libpkgsource_dep = dependency(
   'libpkgsource',
-  version: '>=4.0.0',
+  version: ['>=4.0.0', '<5.0.0'],
   required: true,
   static: want_static,
 )

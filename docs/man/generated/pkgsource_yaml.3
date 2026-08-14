@@ -1,6 +1,6 @@
 .\" Generated from docs/man/pkgsource_yaml.3.md; do not edit.
 .\"
-.TH "PKGSOURCE_YAML" "3" "" "libpkgsource\-yaml 1.1.0" "libpkgsource\-yaml"
+.TH "PKGSOURCE_YAML" "3" "" "libpkgsource\-yaml 2.0.0" "libpkgsource\-yaml"
 .SH NAME
 pkgsource_yaml \- parse strict native YAML into libpkgsource declarations
 .SH SYNOPSIS
@@ -48,8 +48,8 @@ Parsed declarations are not package\-source authority.
 Callers explicitly pass profile declarations to \f[CR]profile_catalog::seal()\f[R] and recipe declarations to \f[CR]seal_source()\f[R].
 Aggregation, precedence, semantic normalization, identity, resolution, fetching, execution, planning, and storage remain outside this library.
 .SH ABI
-The first public ABI is \f[CR]libpkgsource\-yaml.so.1\f[R].
+The current public ABI is \f[CR]libpkgsource\-yaml.so.2\f[R].
 Public headers expose no libyaml types.
-The library requires \f[CR]libpkgsource\f[R] major API 3 and keeps libyaml private in pkg\-config metadata.
+Parser results carry \f[CR]libpkgsource\f[R] declarations by value, so the library requires \f[CR]libpkgsource >= 4.0.0, < 5.0.0\f[R]; libyaml remains private in pkg\-config metadata.
 .SH SEE ALSO
 \f[CR]pkgsource_profiles_yaml(5)\f[R], \f[CR]pkgsource_recipe_yaml(5)\f[R]

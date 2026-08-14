@@ -1,4 +1,4 @@
-% PKGSOURCE_YAML(3) libpkgsource-yaml 1.1.0 | libpkgsource-yaml
+% PKGSOURCE_YAML(3) libpkgsource-yaml 2.0.0 | libpkgsource-yaml
 
 # NAME
 
@@ -69,8 +69,10 @@ library.
 
 # ABI
 
-The first public ABI is `libpkgsource-yaml.so.1`. Public headers expose no
-libyaml types. The library requires `libpkgsource` major API 3 and keeps libyaml private in pkg-config metadata.
+The current public ABI is `libpkgsource-yaml.so.2`. Public headers expose no
+libyaml types. Parser results carry `libpkgsource` declarations by value, so the
+library requires `libpkgsource >= 4.0.0, < 5.0.0`; libyaml remains private in
+pkg-config metadata.
 
 # SEE ALSO
 
