@@ -65,7 +65,7 @@ Canonical project documentation is installed under
 normal man hierarchy.
 
 With `-Dhtml_docs=enabled`, the repository also generates a versioned static
-artifact under `share/htmldocs/libpkgsource-yaml/1.0.1`. The project repository
+artifact under `share/htmldocs/libpkgsource-yaml/1.1.0`. The project repository
 owns generation; a website may publish the resulting tree without rebuilding
 or reinterpreting it.
 

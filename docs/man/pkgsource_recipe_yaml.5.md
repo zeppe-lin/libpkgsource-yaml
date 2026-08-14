@@ -1,4 +1,4 @@
-% PKGSOURCE_RECIPE_YAML(5) libpkgsource-yaml 1.0.1 | libpkgsource-yaml
+% PKGSOURCE_RECIPE_YAML(5) libpkgsource-yaml 1.1.0 | libpkgsource-yaml
 
 # NAME
 
@@ -38,3 +38,9 @@ Parser resource limits apply.
 # SEE ALSO
 
 `pkgsource_yaml(3)`, `pkgsource_profiles_yaml(5)`
+
+# SOURCE REALIZATION
+
+A source entry may declare `unpack: archive`. Absence means the verified source
+remains raw. No archive behavior is inferred from `name`, URL, or filename
+extension.

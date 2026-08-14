@@ -54,6 +54,7 @@ requirements:
 sources:
   - url: https://example.invalid/example-1.2.3.tar.xz
     name: example-1.2.3.tar.xz
+    unpack: archive
     sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
   - path: files/example.conf
     name: example.conf
@@ -86,6 +87,7 @@ inline constexpr std::string_view reordered_recipe = R"(sources:
     sha256: abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789
   - sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     url: https://example.invalid/example-1.2.3.tar.xz
+    unpack: archive
     name: example-1.2.3.tar.xz
 format: zeppe-lin.recipe/1
 architectures:

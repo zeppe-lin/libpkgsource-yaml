@@ -50,11 +50,11 @@ jobs:
       - name: Check out libpkgsource-yaml
         uses: actions/checkout@v4
 
-      - name: Check out libpkgsource 3.0.0
+      - name: Check out libpkgsource 4.0.0
         uses: actions/checkout@v4
         with:
           repository: zeppe-lin/libpkgsource
-          ref: v3.0.1
+          ref: v4.0.0
           path: dependencies/libpkgsource
 
       - name: Check out upstream libyaml 0.2.5
@@ -150,7 +150,7 @@ jobs:
           tests/contracts/check_installed_docs.sh "$stage$PREFIX"
           if [[ '${{ matrix.html_docs }}' == enabled ]]; then
             tests/contracts/check_installed_html_docs.sh \
-              "$stage$PREFIX" 1.0.1
+              "$stage$PREFIX" 1.1.0
           fi
 
       - name: Install
@@ -169,7 +169,7 @@ jobs:
             $(pkg-config "${flags[@]}" --cflags --libs libpkgsource-yaml) \
             -o installed-consumer
           ./installed-consumer
-          test "$(pkg-config --modversion libpkgsource-yaml)" = 1.0.1
+          test "$(pkg-config --modversion libpkgsource-yaml)" = 1.1.0
 
       - name: Audit shared dependency boundary
         if: matrix.mode == 'shared'
@@ -180,7 +180,7 @@ jobs:
             ! -type l -print -quit)
           readelf -d "$library" | tee yaml.dynamic
           grep -F 'Library soname: [libpkgsource-yaml.so.1]' yaml.dynamic
-          grep -F 'Shared library: [libpkgsource.so.3]' yaml.dynamic
+          grep -F 'Shared library: [libpkgsource.so.4]' yaml.dynamic
           grep -E 'Shared library: \[libyaml[^]]*\.so' yaml.dynamic
           ! grep -E 'libcrypto|libpkgsource-codec|libpkgsource-plan|libpkgplan' \
             yaml.dynamic
@@ -208,11 +208,11 @@ jobs:
       - name: Check out libpkgsource-yaml
         uses: actions/checkout@v4
 
-      - name: Check out libpkgsource 3.0.0
+      - name: Check out libpkgsource 4.0.0
         uses: actions/checkout@v4
         with:
           repository: zeppe-lin/libpkgsource
-          ref: v3.0.1
+          ref: v4.0.0
           path: dependencies/libpkgsource
 
       - name: Check out upstream libyaml 0.2.5

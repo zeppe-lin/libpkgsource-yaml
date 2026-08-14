@@ -27,7 +27,7 @@ and parser symbols grouped for review.
 ## Versioning
 
 Version 1.0.0 publishes one SONAME generation and one exact symbol set. Version
-1.0.1 retains that SONAME and exact manifest; its parser/provider hardening does
+1.1.0 retains that SONAME and exact manifest; its parser/provider hardening does
 not add or remove public symbols. Neither release publishes a named GNU
 symbol-version node. A named node is introduced only when the project has a
 concrete compatible-extension policy that requires more than SONAME and exact

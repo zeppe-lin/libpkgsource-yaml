@@ -14,7 +14,7 @@ installs do not depend on Pandoc or Doxygen.
 With `-Dhtml_docs=enabled`, the build produces:
 
 ```text
-build/docs/html/libpkgsource-yaml/1.0.1/
+build/docs/html/libpkgsource-yaml/1.1.0/
 ├── index.html
 ├── design.html
 ├── abi.html
@@ -34,7 +34,7 @@ the artifact, absolute source/build paths, and missing required pages.
 The artifact installs under:
 
 ```text
-${prefix}/share/htmldocs/libpkgsource-yaml/1.0.1/
+${prefix}/share/htmldocs/libpkgsource-yaml/1.1.0/
 ```
 
 Use the `html-docs` install tag for selective staging. The project-owned install

@@ -68,6 +68,12 @@ void parsed_declaration_seals_complete_source_authority()
   require_equal(recipe.sources().size(),
                 std::size_t{2},
                 "both source inputs must be retained");
+  require(recipe.sources()[0].unpack_kind() ==
+              pkgsource::source_unpack_kind::archive,
+          "explicit archive unpack policy must cross the parser boundary");
+  require(recipe.sources()[1].unpack_kind() ==
+              pkgsource::source_unpack_kind::none,
+          "missing unpack policy must retain raw-source semantics");
   require_equal(recipe.build_requirements().size(),
                 std::size_t{3},
                 "profile expansion and package build requirements must seal");

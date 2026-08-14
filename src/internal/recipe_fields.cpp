@@ -241,7 +241,8 @@ std::vector<source_input> sources_value(const node& value,
   for (std::size_t index = 0; index < entries.size(); ++index) {
     const node& entry = entries[index];
     const std::string item_path = path + "[" + std::to_string(index) + "]";
-    allow_keys(entry, origin, item_path, {"url", "path", "name", "sha256"});
+    allow_keys(entry, origin, item_path,
+               {"url", "path", "name", "unpack", "sha256"});
 
     const node* url = find_key(entry, "url");
     const node* local = find_key(entry, "path");
@@ -255,6 +256,16 @@ std::vector<source_input> sources_value(const node& value,
 
     const node& name_node = required_key(entry, "name", origin, item_path);
     const node& digest_node = required_key(entry, "sha256", origin, item_path);
+    source_unpack_kind unpack = source_unpack_kind::none;
+    if (const node* unpack_node = find_key(entry, "unpack")) {
+      const std::string unpack_path = child_path(item_path, "unpack");
+      const std::string value = scalar_value(*unpack_node, origin, unpack_path);
+      if (value != "archive") {
+        fail(yaml_error_code::invalid_value, origin, unpack_path,
+             unpack_node->mark, "unsupported source unpack policy");
+      }
+      unpack = source_unpack_kind::archive;
+    }
     const std::string name_path = child_path(item_path, "name");
     const std::string digest_path = child_path(item_path, "sha256");
     const std::string name = scalar_value(name_node, origin, name_path);
@@ -267,7 +278,7 @@ std::vector<source_input> sources_value(const node& value,
       const std::string locator_path = child_path(item_path, "url");
       const std::string locator = scalar_value(*url, origin, locator_path);
       result.push_back(semantic_value(origin, item_path, entry, [&] {
-        return source_input::remote(locator, name, content);
+        return source_input::remote(locator, name, content, unpack);
       }));
       continue;
     }
@@ -275,7 +286,7 @@ std::vector<source_input> sources_value(const node& value,
     const std::string locator_path = child_path(item_path, "path");
     const std::string locator = scalar_value(*local, origin, locator_path);
     result.push_back(semantic_value(origin, item_path, entry, [&] {
-      return source_input::local(locator, name, content);
+      return source_input::local(locator, name, content, unpack);
     }));
   }
   return result;

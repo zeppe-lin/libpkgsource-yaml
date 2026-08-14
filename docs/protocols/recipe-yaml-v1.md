@@ -86,8 +86,10 @@ sources:
 ```
 
 `sources` is a required sequence and may be empty. Each entry contains exactly
-one of `url` or `path`, plus required `name` and `sha256`. No other keys are
-accepted.
+one of `url` or `path`, plus required `name` and `sha256`. Optional `unpack`
+may be the exact scalar `archive`; when absent, the verified source remains a raw
+object only. No other keys are accepted. Archive recognition is semantic
+authority, never inferred from `name`, URL, or filename extension.
 
 The parser constructs remote or local `source_input` values. Core constructors
 validate local path safety, source names, and an exact lowercase SHA-256 digest.

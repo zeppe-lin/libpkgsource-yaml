@@ -134,6 +134,29 @@ void rejects_unknown_program_languages()
       });
 }
 
+void rejects_unknown_source_unpack_policy()
+{
+  expect_yaml_error(
+      yaml_error_code::invalid_value, "recipe.yml", "sources[0].unpack", [] {
+        (void)parse_recipe_yaml(
+            "format: zeppe-lin.recipe/1\n"
+            "package:\n"
+            "  name: example\n"
+            "  version: 1\n"
+            "  release: 1\n"
+            "  summary: Example\n"
+            "  licenses: [MIT]\n"
+            "requirements: {}\n"
+            "sources:\n"
+            "  - url: https://example.invalid/source.tar.xz\n"
+            "    name: source.tar.xz\n"
+            "    unpack: magic\n"
+            "    sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n"
+            "build: {language: posix-shell, script: echo}\n",
+            source_origin("recipe.yml"));
+      });
+}
+
 } // namespace
 
 int main()
@@ -150,5 +173,7 @@ int main()
        requires_explicit_requirement_subjects},
       {"rejects unknown lifecycle actions", rejects_unknown_lifecycle_actions},
       {"rejects unknown program languages", rejects_unknown_program_languages},
+      {"rejects unknown source unpack policy",
+       rejects_unknown_source_unpack_policy},
   });
 }

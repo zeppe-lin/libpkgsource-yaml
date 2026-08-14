@@ -29,7 +29,7 @@ source_count=$(awk '
   cat "$metadata" >&2
   exit 1
 }
-grep -E 'Requires:.*libpkgsource[[:space:]]*>=[[:space:]]*3\.0\.0' \
+grep -E 'Requires:.*libpkgsource[[:space:]]*>=[[:space:]]*4\.0\.0' \
   "$metadata" >/dev/null
 
 yaml_count=$(awk '

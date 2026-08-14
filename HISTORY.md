@@ -1,5 +1,17 @@
 # libpkgsource-yaml history
 
+## 1.1.0
+
+Explicit source-realization release.
+
+- Added the optional `unpack: archive` recipe source declaration and kept
+  absence as exact raw-source semantics.
+- Preserved `libpkgsource` ownership of source semantics: the YAML adapter
+  translates syntax without inferring realization from names, URLs, or file
+  extensions.
+- Required `libpkgsource >= 4.0.0`, whose source authority retains the unpack
+  policy in source identity and durable encoding.
+
 ## 1.0.1
 
 Testing-foundation hardening release.

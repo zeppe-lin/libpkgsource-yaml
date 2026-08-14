@@ -1,6 +1,6 @@
 .\" Generated from docs/man/pkgsource_recipe_yaml.5.md; do not edit.
 .\"
-.TH "PKGSOURCE_RECIPE_YAML" "5" "" "libpkgsource\-yaml 1.0.1" "libpkgsource\-yaml"
+.TH "PKGSOURCE_RECIPE_YAML" "5" "" "libpkgsource\-yaml 1.1.0" "libpkgsource\-yaml"
 .SH NAME
 pkgsource_recipe_yaml \- describe the native recipe YAML version 1 protocol
 .SH DESCRIPTION
@@ -25,3 +25,7 @@ Directives, anchors, aliases, merge keys, custom or incompatible tags, duplicate
 Parser resource limits apply.
 .SH SEE ALSO
 \f[CR]pkgsource_yaml(3)\f[R], \f[CR]pkgsource_profiles_yaml(5)\f[R]
+.SH SOURCE REALIZATION
+A source entry may declare \f[CR]unpack: archive\f[R].
+Absence means the verified source remains raw.
+No archive behavior is inferred from \f[CR]name\f[R], URL, or filename extension.

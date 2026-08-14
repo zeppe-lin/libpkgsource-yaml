@@ -1,4 +1,4 @@
-% PKGSOURCE_YAML(3) libpkgsource-yaml 1.0.1 | libpkgsource-yaml
+% PKGSOURCE_YAML(3) libpkgsource-yaml 1.1.0 | libpkgsource-yaml
 
 # NAME
 
